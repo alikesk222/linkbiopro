@@ -16,8 +16,10 @@ model User {
   bio         String?
   avatarUrl   String?
   theme       String   @default("koyu")
-  isPro       Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isPro        Boolean   @default(false)
+  proExpiresAt DateTime?
+  proNote      String?
+  createdAt    DateTime  @default(now())
   links       Link[]
 }
 

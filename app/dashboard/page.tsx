@@ -23,7 +23,7 @@ interface LinkItem {
   order: number
 }
 
-type Tab = 'linkler' | 'profil' | 'analitik'
+type Tab = 'linkler' | 'profil' | 'analitik' | 'pro'
 
 const THEMES = [
   { id: 'koyu', label: 'Koyu', pro: false },
@@ -206,12 +206,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-800 mb-6 gap-1">
+        <div className="flex border-b border-slate-800 mb-6 gap-1 flex-wrap">
           {(['linkler', 'profil', 'analitik'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-5 py-2.5 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
+              className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 tab === t
                   ? 'border-indigo-500 text-white'
                   : 'border-transparent text-slate-400 hover:text-white'
@@ -220,6 +220,18 @@ export default function DashboardPage() {
               {t === 'linkler' ? 'Linkler' : t === 'profil' ? 'Profil' : 'Analitik'}
             </button>
           ))}
+          {!user.isPro && (
+            <button
+              onClick={() => setTab('pro')}
+              className={`px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+                tab === 'pro'
+                  ? 'border-indigo-500 text-indigo-300'
+                  : 'border-transparent text-indigo-400 hover:text-indigo-300'
+              }`}
+            >
+              ⚡ Pro&apos;ya Geç
+            </button>
+          )}
         </div>
 
         {/* LINKLER TAB */}
@@ -480,6 +492,40 @@ export default function DashboardPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* PRO TAB */}
+        {tab === 'pro' && (
+          <div className="space-y-5">
+            <div className="relative bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-700/60 rounded-2xl p-8 text-center overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/10 rounded-full blur-2xl" />
+              <div className="relative">
+                <div className="text-5xl mb-3">⚡</div>
+                <h2 className="text-2xl font-bold mb-2">Pro&apos;ya Yükselt</h2>
+                <p className="text-slate-400 mb-6">Ayda sadece <strong className="text-white">₺59</strong> ile tüm özellikleri açın.</p>
+                <Link
+                  href="/pro"
+                  className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors"
+                >
+                  Pro Planı İncele &rarr;
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                { icon: '🔗', title: 'Sınırsız Link', desc: 'Ücretsiz plandaki 5 link sınırını kaldırın.' },
+                { icon: '🎨', title: 'Tüm Temalar', desc: 'Mor, pembe, yeşil — 5 tema seçeneği.' },
+                { icon: '📊', title: 'Detaylı Analitik', desc: 'Günlük, haftalık tıklama takibi.' },
+              ].map(f => (
+                <div key={f.title} className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
+                  <div className="text-3xl mb-3">{f.icon}</div>
+                  <h3 className="font-semibold text-sm mb-1">{f.title}</h3>
+                  <p className="text-slate-500 text-xs">{f.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
