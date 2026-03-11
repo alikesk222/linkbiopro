@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     ],
   }
 
-  return new Promise((resolve) => {
+  return new Promise<NextResponse>((resolve) => {
     iyzipay.checkoutFormInitialize.create(request, (err: unknown, result: { status: string; paymentPageUrl: string; token: string }) => {
       if (err || result.status !== 'success') {
         resolve(NextResponse.json({ error: 'Ödeme başlatılamadı' }, { status: 500 }))
