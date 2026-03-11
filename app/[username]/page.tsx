@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
+import { detectPlatform } from '@/lib/social-icons'
 
 const THEMES: Record<string, { bg: string; card: string; btn: string; text: string; subtext: string }> = {
   koyu: {
@@ -101,15 +102,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
           <p className={`text-center text-sm ${theme.subtext}`}>Henüz link eklenmemiş.</p>
         ) : (
           <div className="space-y-3">
-            {user.links.map(link => (
-              <a
-                key={link.id}
-                href={`/api/click/${link.id}`}
-                className={`block w-full py-3.5 px-5 rounded-2xl text-center font-semibold text-sm transition-all duration-200 ${theme.btn}`}
-              >
-                {link.title}
-              </a>
-            ))}
+            {user.links.map(link => {
+              const platform = detectPlatform(link.url)
+              return (
+                <a
+                  key={link.id}
+                  href={`/api/click/${link.id}`}
+                  className={`flex items-center justify-center gap-2.5 w-full py-3.5 px-5 rounded-2xl font-semibold text-sm transition-all duration-200 ${theme.btn}`}
+                >
+                  {platform && <span className="text-base">{platform.icon}</span>}
+                  {link.title}
+                </a>
+              )
+            })}
           </div>
         )}
 

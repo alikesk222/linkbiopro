@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { getPlatformIcon } from '@/lib/social-icons'
 
 interface User {
   id: string
@@ -33,6 +35,12 @@ const THEMES = [
   { id: 'yesil', label: 'Yeşil', pro: true },
 ]
 
+interface AnalyticsData {
+  daily: { date: string; clicks: number }[]
+  links: { id: string; title: string; clicks: number }[]
+  totalClicks: number
+}
+
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [links, setLinks] = useState<LinkItem[]>([])
@@ -47,6 +55,10 @@ export default function DashboardPage() {
   const [profileForm, setProfileForm] = useState({ displayName: '', bio: '', theme: '' })
   const [profileMsg, setProfileMsg] = useState('')
   const [profileLoading, setProfileLoading] = useState(false)
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [analyticsDays, setAnalyticsDays] = useState(30)
+  const [avatarLoading, setAvatarLoading] = useState(false)
+  const [showQR, setShowQR] = useState(false)
   const router = useRouter()
 
   const fetchAll = useCallback(async () => {
@@ -210,7 +222,12 @@ export default function DashboardPage() {
           {(['linkler', 'profil', 'analitik'] as Tab[]).map(t => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => {
+                setTab(t)
+                if (t === 'analitik' && !analytics) {
+                  fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)
+                }
+              }}
               className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 tab === t
                   ? 'border-indigo-500 text-white'
@@ -327,6 +344,7 @@ export default function DashboardPage() {
                           </button>
                         </div>
 
+                        <span className="text-lg shrink-0">{getPlatformIcon(link.url)}</span>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm text-white truncate">{link.title}</p>
                           <p className="text-slate-500 text-xs truncate">{link.url}</p>
@@ -374,6 +392,71 @@ export default function DashboardPage() {
           <form onSubmit={saveProfile} className="space-y-5">
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-4">
               <h2 className="font-semibold text-slate-200">Profil Bilgileri</h2>
+
+              {/* Avatar upload */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Profil Fotoğrafı</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold overflow-hidden shrink-0">
+                    {user?.avatarUrl
+                      ? <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      : user?.displayName[0].toUpperCase()
+                    }
+                  </div>
+                  <div>
+                    <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm text-white px-4 py-2 rounded-lg transition-colors inline-block">
+                      {avatarLoading ? 'Yükleniyor...' : 'Fotoğraf Seç'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async e => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          setAvatarLoading(true)
+                          const fd = new FormData()
+                          fd.append('avatar', file)
+                          const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
+                          if (res.ok) {
+                            const { avatarUrl } = await res.json()
+                            setUser(u => u ? { ...u, avatarUrl } : u)
+                          }
+                          setAvatarLoading(false)
+                        }}
+                      />
+                    </label>
+                    <p className="text-xs text-slate-500 mt-1">JPG, PNG, WebP — maks. 2MB</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Code */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">QR Kod</label>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowQR(!showQR)}
+                    className="text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    {showQR ? 'Gizle' : 'QR Kodu Göster'}
+                  </button>
+                  {showQR && (
+                    <a
+                      href={`/api/qr/${user?.username}`}
+                      download={`${user?.username}-qr.svg`}
+                      className="text-sm text-indigo-400 hover:text-white transition-colors"
+                    >
+                      İndir (SVG)
+                    </a>
+                  )}
+                </div>
+                {showQR && user && (
+                  <div className="mt-3 bg-[#0a0f1e] border border-slate-700 rounded-xl p-4 inline-block">
+                    <img src={`/api/qr/${user.username}`} alt="QR" className="w-40 h-40" />
+                  </div>
+                )}
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">Görünen Ad</label>
@@ -454,21 +537,80 @@ export default function DashboardPage() {
         {/* ANALITIK TAB */}
         {tab === 'analitik' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            {/* Period selector */}
+            <div className="flex gap-2">
+              {[7, 14, 30].map(d => (
+                <button
+                  key={d}
+                  onClick={() => {
+                    setAnalyticsDays(d)
+                    fetch(`/api/analytics?days=${d}`).then(r => r.json()).then(setAnalytics)
+                  }}
+                  className={`text-xs px-4 py-1.5 rounded-lg font-medium transition-colors ${
+                    analyticsDays === d ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {d} gün
+                </button>
+              ))}
+              <button
+                onClick={() => fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)}
+                className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-500 hover:text-white transition-colors ml-auto"
+              >
+                ↻ Yenile
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
-                <div className="text-3xl font-black text-white mb-1">{totalClicks}</div>
+                <div className="text-2xl font-black text-white mb-1">{analytics?.totalClicks ?? totalClicks}</div>
+                <div className="text-xs text-slate-500">Dönem Tıklama</div>
+              </div>
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
+                <div className="text-2xl font-black text-white mb-1">{links.reduce((s, l) => s + l.clicks, 0)}</div>
                 <div className="text-xs text-slate-500">Toplam Tıklama</div>
               </div>
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
-                <div className="text-3xl font-black text-white mb-1">{links.length}</div>
+                <div className="text-2xl font-black text-white mb-1">{links.length}</div>
                 <div className="text-xs text-slate-500">Toplam Link</div>
               </div>
             </div>
 
-            {sortedLinks.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <p>Henüz link eklemediniz.</p>
+            {/* Chart */}
+            {analytics && analytics.daily.length > 0 && (
+              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
+                <p className="text-sm font-semibold text-slate-200 mb-4">Günlük Tıklama Grafiği</p>
+                <ResponsiveContainer width="100%" height={200}>
+                  <AreaChart data={analytics.daily}>
+                    <defs>
+                      <linearGradient id="clickGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: '#64748b', fontSize: 11 }}
+                      tickFormatter={v => v.slice(5)}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#fff' }}
+                      labelFormatter={v => `Tarih: ${v}`}
+                      formatter={(v: number) => [`${v} tık`, 'Tıklama']}
+                    />
+                    <Area type="monotone" dataKey="clicks" stroke="#6366f1" strokeWidth={2} fill="url(#clickGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
+            )}
+
+            {/* Link performance */}
+            {sortedLinks.length === 0 ? (
+              <div className="text-center py-8 text-slate-500"><p>Henüz link eklemediniz.</p></div>
             ) : (
               <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-slate-800">
@@ -476,14 +618,17 @@ export default function DashboardPage() {
                 </div>
                 <div className="divide-y divide-slate-800/60">
                   {[...sortedLinks].sort((a, b) => b.clicks - a.clicks).map(link => (
-                    <div key={link.id} className="px-5 py-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-medium text-white truncate">{link.title}</p>
+                    <div key={link.id} className="px-5 py-3.5">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{getPlatformIcon(link.url)}</span>
+                          <p className="text-sm font-medium text-white truncate">{link.title}</p>
+                        </div>
                         <span className="text-sm font-bold text-indigo-400 ml-3 shrink-0">{link.clicks} tık</span>
                       </div>
                       <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-indigo-600 rounded-full"
+                          className="h-full bg-indigo-600 rounded-full transition-all"
                           style={{ width: totalClicks > 0 ? `${(link.clicks / totalClicks) * 100}%` : '0%' }}
                         />
                       </div>

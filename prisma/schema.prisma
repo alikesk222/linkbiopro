@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -8,32 +8,48 @@ generator client {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  password    String
-  username    String   @unique
-  displayName String
-  bio         String?
-  avatarUrl   String?
-  theme       String   @default("koyu")
-  isPro        Boolean   @default(false)
-  proExpiresAt DateTime?
-  proNote      String?
-  createdAt    DateTime  @default(now())
-  links       Link[]
+  id              String      @id @default(cuid())
+  email           String      @unique
+  password        String
+  username        String      @unique
+  displayName     String
+  bio             String?
+  avatarUrl       String?
+  theme           String      @default("koyu")
+  themeConfig     Json?
+  isPro           Boolean     @default(false)
+  proExpiresAt    DateTime?
+  proNote         String?
+  onboardingDone  Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  links           Link[]
+  linkGroups      LinkGroup[]
 }
 
 model Link {
-  id        String     @id @default(cuid())
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  url         String
+  icon        String?
+  groupId     String?
+  group       LinkGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  isFeatured  Boolean    @default(false)
+  order       Int        @default(0)
+  clicks      Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  clickLogs   ClickLog[]
+}
+
+model LinkGroup {
+  id        String   @id @default(cuid())
   userId    String
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
-  url       String
-  order     Int        @default(0)
-  clicks    Int        @default(0)
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  clickLogs ClickLog[]
+  order     Int      @default(0)
+  links     Link[]
 }
 
 model ClickLog {
@@ -42,4 +58,6 @@ model ClickLog {
   link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
   clickedAt DateTime @default(now())
   referrer  String?
+  country   String?
+  device    String?
 }

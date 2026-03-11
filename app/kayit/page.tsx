@@ -26,7 +26,7 @@ export default function KayitPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Kayıt başarısız')
-      router.push('/dashboard')
+      router.push('/onboarding')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Bir hata oluştu')
       setLoading(false)
