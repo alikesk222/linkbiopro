@@ -12,6 +12,7 @@ interface User {
   username: string
   displayName: string
   bio: string | null
+  avatarUrl: string | null
   theme: string
   isPro: boolean
 }
