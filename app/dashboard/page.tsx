@@ -8,10 +8,17 @@ import { getPlatformIcon } from '@/lib/social-icons'
 
 interface ThemeConfig {
   btnStyle?: 'rounded' | 'pill' | 'square'
+  btnColor?: string
+  btnTextColor?: string
   fontFamily?: 'inter' | 'poppins' | 'raleway' | 'playfair'
   bgGradient?: boolean
   bgFrom?: string
   bgTo?: string
+  titleColor?: string
+  cardOpacity?: number
+  avatarShape?: 'circle' | 'rounded' | 'square'
+  showBio?: boolean
+  socialIconStyle?: 'none' | 'left' | 'center'
 }
 
 interface User {
@@ -66,10 +73,17 @@ interface AnalyticsData {
 
 const DEFAULT_THEME_CONFIG: ThemeConfig = {
   btnStyle: 'rounded',
+  btnColor: '#4f46e5',
+  btnTextColor: '#ffffff',
   fontFamily: 'inter',
   bgGradient: false,
   bgFrom: '#0a0f1e',
   bgTo: '#6366f1',
+  titleColor: '#ffffff',
+  cardOpacity: 100,
+  avatarShape: 'circle',
+  showBio: true,
+  socialIconStyle: 'left',
 }
 
 export default function DashboardPage() {
@@ -96,6 +110,7 @@ export default function DashboardPage() {
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [previewKey, setPreviewKey] = useState(0)
+  const [livePreview, setLivePreview] = useState(true)
   const router = useRouter()
 
   const fetchAll = useCallback(async () => {
@@ -693,6 +708,179 @@ export default function DashboardPage() {
                       />
                     )}
                   </div>
+
+                  {/* Button color */}
+                  <div className="mt-5">
+                    <label className="block text-xs font-medium text-gray-500 mb-3">Buton Rengi</label>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400 mb-1.5">Arka Plan</p>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="color"
+                            value={profileForm.themeConfig.btnColor || '#4f46e5'}
+                            disabled={!user.isPro}
+                            onChange={e => updateThemeConfig({ btnColor: e.target.value })}
+                            className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                          />
+                          <input
+                            value={profileForm.themeConfig.btnColor || '#4f46e5'}
+                            disabled={!user.isPro}
+                            onChange={e => updateThemeConfig({ btnColor: e.target.value })}
+                            maxLength={7}
+                            className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-gray-400 mb-1.5">Yazı Rengi</p>
+                        <div className="flex gap-2 items-center">
+                          <input
+                            type="color"
+                            value={profileForm.themeConfig.btnTextColor || '#ffffff'}
+                            disabled={!user.isPro}
+                            onChange={e => updateThemeConfig({ btnTextColor: e.target.value })}
+                            className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                          />
+                          <input
+                            value={profileForm.themeConfig.btnTextColor || '#ffffff'}
+                            disabled={!user.isPro}
+                            onChange={e => updateThemeConfig({ btnTextColor: e.target.value })}
+                            maxLength={7}
+                            className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Button preview */}
+                    <div className="mt-3 flex justify-center">
+                      <div
+                        className={`px-8 py-2 text-sm font-medium ${
+                          profileForm.themeConfig.btnStyle === 'pill' ? 'rounded-full' :
+                          profileForm.themeConfig.btnStyle === 'square' ? 'rounded-md' : 'rounded-xl'
+                        }`}
+                        style={{ background: profileForm.themeConfig.btnColor || '#4f46e5', color: profileForm.themeConfig.btnTextColor || '#ffffff' }}
+                      >
+                        Örnek Buton
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Advanced customization - Pro */}
+                <div className={`bg-white border border-gray-200 rounded-2xl p-6 shadow-sm ${!user.isPro ? 'opacity-60' : ''}`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-semibold text-gray-900">Gelişmiş Özelleştirme</h2>
+                    {!user.isPro && (
+                      <span className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-full font-semibold">PRO</span>
+                    )}
+                  </div>
+
+                  {/* Title color */}
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-gray-500 mb-2">Başlık / İsim Rengi</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={profileForm.themeConfig.titleColor || '#ffffff'}
+                        disabled={!user.isPro}
+                        onChange={e => updateThemeConfig({ titleColor: e.target.value })}
+                        className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                      />
+                      <input
+                        value={profileForm.themeConfig.titleColor || '#ffffff'}
+                        disabled={!user.isPro}
+                        onChange={e => updateThemeConfig({ titleColor: e.target.value })}
+                        maxLength={7}
+                        className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Avatar shape */}
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-gray-500 mb-2">Avatar Şekli</label>
+                    <div className="flex gap-2">
+                      {([{ id: 'circle', label: 'Yuvarlak', cls: 'rounded-full' }, { id: 'rounded', label: 'Köşeli Yuv.', cls: 'rounded-xl' }, { id: 'square', label: 'Kare', cls: 'rounded-none' }] as const).map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          disabled={!user.isPro}
+                          onClick={() => updateThemeConfig({ avatarShape: s.id })}
+                          className={`flex-1 py-2 border text-xs font-medium transition-colors ${s.cls} ${
+                            profileForm.themeConfig.avatarShape === s.id
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          } disabled:cursor-not-allowed`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Social icon style */}
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-gray-500 mb-2">Sosyal Ikon Konumu</label>
+                    <div className="flex gap-2">
+                      {([{ id: 'none', label: 'Yok' }, { id: 'left', label: 'Solda' }, { id: 'center', label: 'Ortada' }] as const).map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          disabled={!user.isPro}
+                          onClick={() => updateThemeConfig({ socialIconStyle: s.id })}
+                          className={`flex-1 py-2 rounded-xl border text-xs font-medium transition-colors ${
+                            profileForm.themeConfig.socialIconStyle === s.id
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          } disabled:cursor-not-allowed`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Card opacity */}
+                  <div className="mb-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-medium text-gray-500">Kart Saydamlığı</label>
+                      <span className="text-xs font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{profileForm.themeConfig.cardOpacity ?? 100}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={100}
+                      step={5}
+                      value={profileForm.themeConfig.cardOpacity ?? 100}
+                      disabled={!user.isPro}
+                      onChange={e => updateThemeConfig({ cardOpacity: Number(e.target.value) })}
+                      className="w-full accent-indigo-600 disabled:cursor-not-allowed"
+                    />
+                    <div className="flex justify-between text-[10px] text-gray-300 mt-1">
+                      <span>Saydam</span><span>Opak</span>
+                    </div>
+                  </div>
+
+                  {/* Show bio toggle */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-gray-500">Bio Göster</label>
+                      <button
+                        type="button"
+                        disabled={!user.isPro}
+                        onClick={() => updateThemeConfig({ showBio: !(profileForm.themeConfig.showBio ?? true) })}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:cursor-not-allowed ${
+                          (profileForm.themeConfig.showBio ?? true) ? 'bg-indigo-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          (profileForm.themeConfig.showBio ?? true) ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                        }`} />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-1">Profil sayfasında bio metnini göster veya gizle</p>
+                  </div>
                 </div>
 
                 {profileMsg && (
@@ -853,14 +1041,28 @@ export default function DashboardPage() {
           {/* ─── Preview panel (desktop only) ─── */}
           <div className="hidden lg:block w-[268px] shrink-0 sticky top-24 self-start">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Önizleme</p>
-              <button
-                onClick={() => setPreviewKey(k => k + 1)}
-                className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
-                title="Yenile"
-              >
-                ↻ Yenile
-              </button>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Önizleme</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setLivePreview(v => !v)}
+                  className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium transition-colors border ${
+                    livePreview
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                      : 'bg-gray-100 border-gray-200 text-gray-500'
+                  }`}
+                  title={livePreview ? 'Canlı akış açık' : 'Canlı akış kapalı'}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${livePreview ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                  {livePreview ? 'Canlı' : 'Statik'}
+                </button>
+                <button
+                  onClick={() => setPreviewKey(k => k + 1)}
+                  className="text-xs text-gray-400 hover:text-gray-700 transition-colors p-1"
+                  title="Yenile"
+                >
+                  ↻
+                </button>
+              </div>
             </div>
 
             {/* iPhone frame */}
@@ -872,7 +1074,7 @@ export default function DashboardPage() {
                 <div className="rounded-[36px] overflow-hidden bg-gray-950" style={{ height: '520px' }}>
                   <iframe
                     key={previewKey}
-                    src={`/${user.username}`}
+                    src={`/${user.username}${livePreview ? `?_t=${previewKey}` : ''}`}
                     className="w-full h-full border-none"
                     style={{ pointerEvents: 'none', transform: 'scale(0.85)', transformOrigin: 'top center', width: '118%', marginLeft: '-9%' }}
                     title="Profil Önizleme"
@@ -884,7 +1086,10 @@ export default function DashboardPage() {
             </div>
 
             <p className="text-center text-xs text-gray-400 mt-3">
-              Kaydet&apos;e bastıktan sonra<br />önizleme güncellenir.
+              {livePreview
+                ? <>Değişiklikler kaydedince<br />otomatik güncellenir.</>  
+                : <>Kaydet&apos;e bastıktan sonra<br />↻ Yenile&apos;ye basın.</>  
+              }
             </p>
           </div>
 
