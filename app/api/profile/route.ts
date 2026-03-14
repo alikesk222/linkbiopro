@@ -34,12 +34,19 @@ export async function PUT(req: NextRequest) {
     data.theme = body.theme
   }
 
+  if (body.themeConfig !== undefined) {
+    if (!user.isPro) {
+      return NextResponse.json({ error: 'Tema editoru Pro plana ozeldir' }, { status: 403 })
+    }
+    data.themeConfig = body.themeConfig
+  }
+
   const updated = await db.user.update({
     where: { id: session.userId },
     data,
     select: {
       id: true, email: true, username: true, displayName: true,
-      bio: true, avatarUrl: true, theme: true, isPro: true,
+      bio: true, avatarUrl: true, theme: true, themeConfig: true, isPro: true,
     },
   })
   return NextResponse.json(updated)

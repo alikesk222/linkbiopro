@@ -6,6 +6,14 @@ import Link from 'next/link'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { getPlatformIcon } from '@/lib/social-icons'
 
+interface ThemeConfig {
+  btnStyle?: 'rounded' | 'pill' | 'square'
+  fontFamily?: 'inter' | 'poppins' | 'raleway' | 'playfair'
+  bgGradient?: boolean
+  bgFrom?: string
+  bgTo?: string
+}
+
 interface User {
   id: string
   email: string
@@ -14,6 +22,7 @@ interface User {
   bio: string | null
   avatarUrl: string | null
   theme: string
+  themeConfig: ThemeConfig | null
   isPro: boolean
 }
 
@@ -28,7 +37,7 @@ interface LinkItem {
 
 type Tab = 'linkler' | 'profil' | 'analitik' | 'pro'
 
-const THEMES = [
+const PRESET_THEMES = [
   { id: 'koyu', label: 'Koyu', pro: false },
   { id: 'acik', label: 'Açık', pro: false },
   { id: 'mor', label: 'Mor', pro: true },
@@ -36,10 +45,31 @@ const THEMES = [
   { id: 'yesil', label: 'Yeşil', pro: true },
 ]
 
+const BTN_STYLES = [
+  { id: 'rounded', label: 'Yuvarlak', cls: 'rounded-xl' },
+  { id: 'pill', label: 'Hap', cls: 'rounded-full' },
+  { id: 'square', label: 'Köşeli', cls: 'rounded-md' },
+]
+
+const FONTS = [
+  { id: 'inter', label: 'Inter', style: {} },
+  { id: 'poppins', label: 'Poppins', style: { fontFamily: "'Poppins', sans-serif" } },
+  { id: 'raleway', label: 'Raleway', style: { fontFamily: "'Raleway', sans-serif" } },
+  { id: 'playfair', label: 'Playfair', style: { fontFamily: "'Playfair Display', serif" } },
+]
+
 interface AnalyticsData {
   daily: { date: string; clicks: number }[]
   links: { id: string; title: string; clicks: number }[]
   totalClicks: number
+}
+
+const DEFAULT_THEME_CONFIG: ThemeConfig = {
+  btnStyle: 'rounded',
+  fontFamily: 'inter',
+  bgGradient: false,
+  bgFrom: '#0a0f1e',
+  bgTo: '#6366f1',
 }
 
 export default function DashboardPage() {
@@ -53,13 +83,19 @@ export default function DashboardPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
   const [editUrl, setEditUrl] = useState('')
-  const [profileForm, setProfileForm] = useState({ displayName: '', bio: '', theme: '' })
+  const [profileForm, setProfileForm] = useState({
+    displayName: '',
+    bio: '',
+    theme: '',
+    themeConfig: DEFAULT_THEME_CONFIG,
+  })
   const [profileMsg, setProfileMsg] = useState('')
   const [profileLoading, setProfileLoading] = useState(false)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [analyticsDays, setAnalyticsDays] = useState(30)
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [previewKey, setPreviewKey] = useState(0)
   const router = useRouter()
 
   const fetchAll = useCallback(async () => {
@@ -69,7 +105,12 @@ export default function DashboardPage() {
     const l = await lRes.json()
     setUser(u)
     setLinks(l)
-    setProfileForm({ displayName: u.displayName, bio: u.bio || '', theme: u.theme })
+    setProfileForm({
+      displayName: u.displayName,
+      bio: u.bio || '',
+      theme: u.theme,
+      themeConfig: { ...DEFAULT_THEME_CONFIG, ...(u.themeConfig || {}) },
+    })
   }, [router])
 
   useEffect(() => { fetchAll() }, [fetchAll])
@@ -88,12 +129,14 @@ export default function DashboardPage() {
     setLinks(l => [...l, data])
     setNewTitle(''); setNewUrl('')
     setAddLoading(false)
+    setPreviewKey(k => k + 1)
   }
 
   async function deleteLink(id: string) {
     if (!confirm('Bu linki silmek istediğinizden emin misiniz?')) return
     await fetch(`/api/links/${id}`, { method: 'DELETE' })
     setLinks(l => l.filter(x => x.id !== id))
+    setPreviewKey(k => k + 1)
   }
 
   async function saveEdit(id: string) {
@@ -106,6 +149,7 @@ export default function DashboardPage() {
       const updated = await res.json()
       setLinks(l => l.map(x => x.id === id ? updated : x))
       setEditId(null)
+      setPreviewKey(k => k + 1)
     }
   }
 
@@ -136,27 +180,39 @@ export default function DashboardPage() {
       if (x.id === b.id) return { ...x, order: a.order }
       return x
     }))
+    setPreviewKey(k => k + 1)
   }
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault()
     setProfileMsg('')
     setProfileLoading(true)
+    const body: Record<string, unknown> = {
+      displayName: profileForm.displayName,
+      bio: profileForm.bio,
+      theme: profileForm.theme,
+    }
+    if (user?.isPro) body.themeConfig = profileForm.themeConfig
     const res = await fetch('/api/profile', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(profileForm),
+      body: JSON.stringify(body),
     })
     const data = await res.json()
     if (!res.ok) { setProfileMsg(data.error || 'Hata'); setProfileLoading(false); return }
     setUser(data)
     setProfileMsg('Profil kaydedildi!')
     setProfileLoading(false)
+    setPreviewKey(k => k + 1)
   }
 
   async function logout() {
     await fetch('/api/auth/cikis', { method: 'POST' })
     router.push('/')
+  }
+
+  function updateThemeConfig(patch: Partial<ThemeConfig>) {
+    setProfileForm(f => ({ ...f, themeConfig: { ...f.themeConfig, ...patch } }))
   }
 
   if (!user) {
@@ -171,26 +227,23 @@ export default function DashboardPage() {
   const totalClicks = links.reduce((sum, l) => sum + l.clicks, 0)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
       {/* Navbar */}
-      <header className="border-b border-slate-800/60 bg-[#0a0f1e]/80 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-gray-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">L</div>
-            <span className="font-bold text-white text-lg tracking-tight">LinkBio Pro</span>
-          </Link>
+          <Link href="/"><div className="flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">L</div><span className="font-bold text-gray-900 text-lg tracking-tight">LinkBio<span className="text-indigo-600">.Pro</span></span></div></Link>
           <div className="flex items-center gap-4">
             <a
               href={`/${user.username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-indigo-400 hover:text-white transition-colors hidden sm:block"
+              className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors hidden sm:block font-medium"
             >
               /{user.username} &rarr;
             </a>
             <button
               onClick={logout}
-              className="text-sm text-slate-400 hover:text-white transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
             >
               Çıkış
             </button>
@@ -198,483 +251,644 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8">
+      <main className="flex-1">
+        <div className="max-w-6xl mx-auto px-4 py-8 flex gap-8 items-start">
 
-        {/* Profile URL banner */}
-        <div className="bg-indigo-950/40 border border-indigo-800/50 rounded-xl px-5 py-3.5 mb-6 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs text-indigo-400 font-medium mb-0.5">Profil adresiniz</p>
-            <p className="text-white font-mono text-sm">
-              {typeof window !== 'undefined' ? window.location.origin : ''}/{user.username}
-            </p>
-          </div>
-          <a
-            href={`/${user.username}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
-          >
-            Görüntüle
-          </a>
-        </div>
+          {/* ─── Main content column ─── */}
+          <div className="flex-1 min-w-0">
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-800 mb-6 gap-1 flex-wrap">
-          {(['linkler', 'profil', 'analitik'] as Tab[]).map(t => (
-            <button
-              key={t}
-              onClick={() => {
-                setTab(t)
-                if (t === 'analitik' && !analytics) {
-                  fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)
-                }
-              }}
-              className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                tab === t
-                  ? 'border-indigo-500 text-white'
-                  : 'border-transparent text-slate-400 hover:text-white'
-              }`}
-            >
-              {t === 'linkler' ? 'Linkler' : t === 'profil' ? 'Profil' : 'Analitik'}
-            </button>
-          ))}
-          {!user.isPro && (
-            <button
-              onClick={() => setTab('pro')}
-              className={`px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
-                tab === 'pro'
-                  ? 'border-indigo-500 text-indigo-300'
-                  : 'border-transparent text-indigo-400 hover:text-indigo-300'
-              }`}
-            >
-              ⚡ Pro&apos;ya Geç
-            </button>
-          )}
-        </div>
-
-        {/* LINKLER TAB */}
-        {tab === 'linkler' && (
-          <div className="space-y-4">
-            {/* Add link form */}
-            <form onSubmit={addLink} className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
-              <p className="text-sm font-semibold text-slate-200 mb-4">Yeni Link Ekle</p>
-              <div className="grid sm:grid-cols-2 gap-3 mb-3">
-                <input
-                  value={newTitle}
-                  onChange={e => setNewTitle(e.target.value)}
-                  placeholder="Başlık (örn: Instagram)"
-                  required
-                  className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
-                />
-                <input
-                  value={newUrl}
-                  onChange={e => setNewUrl(e.target.value)}
-                  placeholder="URL (örn: https://instagram.com/...)"
-                  required
-                  type="url"
-                  className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-all"
-                />
+            {/* Profile URL banner */}
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-3.5 mb-6 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs text-indigo-600 font-medium mb-0.5">Profil adresiniz</p>
+                <p className="text-indigo-900 font-mono text-sm">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/{user.username}
+                </p>
               </div>
-              {addError && <p className="text-red-400 text-xs mb-3">{addError}</p>}
-              <button
-                type="submit"
-                disabled={addLoading}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
+              <a
+                href={`/${user.username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
               >
-                {addLoading ? 'Ekleniyor...' : '+ Ekle'}
-              </button>
-              {!user.isPro && (
-                <span className="text-xs text-slate-500 ml-3">{links.length}/5 link kullanıldı</span>
-              )}
-            </form>
+                Görüntüle
+              </a>
+            </div>
 
-            {/* Link list */}
-            {sortedLinks.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <p className="text-4xl mb-3">🔗</p>
-                <p>Henüz link eklemediniz.</p>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {sortedLinks.map((link, idx) => (
-                  <div
-                    key={link.id}
-                    className={`bg-slate-900/50 border rounded-xl p-4 transition-colors ${
-                      link.isActive ? 'border-slate-800' : 'border-slate-800/50 opacity-60'
-                    }`}
-                  >
-                    {editId === link.id ? (
-                      <div className="space-y-2">
-                        <input
-                          value={editTitle}
-                          onChange={e => setEditTitle(e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                        />
-                        <input
-                          value={editUrl}
-                          onChange={e => setEditUrl(e.target.value)}
-                          type="url"
-                          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                        />
-                        <div className="flex gap-2">
-                          <button onClick={() => saveEdit(link.id)} className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors">
-                            Kaydet
-                          </button>
-                          <button onClick={() => setEditId(null)} className="text-slate-400 hover:text-white text-xs px-3 py-1.5 rounded-lg transition-colors">
-                            İptal
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        {/* Order buttons */}
-                        <div className="flex flex-col gap-0.5">
-                          <button
-                            onClick={() => moveLink(link.id, 'up')}
-                            disabled={idx === 0}
-                            className="text-slate-600 hover:text-slate-400 disabled:opacity-20 text-xs leading-none"
-                          >
-                            ▲
-                          </button>
-                          <button
-                            onClick={() => moveLink(link.id, 'down')}
-                            disabled={idx === sortedLinks.length - 1}
-                            className="text-slate-600 hover:text-slate-400 disabled:opacity-20 text-xs leading-none"
-                          >
-                            ▼
-                          </button>
-                        </div>
-
-                        <span className="text-lg shrink-0">{getPlatformIcon(link.url)}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm text-white truncate">{link.title}</p>
-                          <p className="text-slate-500 text-xs truncate">{link.url}</p>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs text-slate-500">{link.clicks} tık</span>
-
-                          <button
-                            onClick={() => toggleActive(link.id, link.isActive)}
-                            className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                              link.isActive
-                                ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-800/50'
-                                : 'bg-slate-800 text-slate-500 border border-slate-700'
-                            }`}
-                          >
-                            {link.isActive ? 'Aktif' : 'Pasif'}
-                          </button>
-
-                          <button
-                            onClick={() => { setEditId(link.id); setEditTitle(link.title); setEditUrl(link.url) }}
-                            className="text-slate-500 hover:text-white text-xs px-2 py-1 rounded-md hover:bg-slate-800 transition-colors"
-                          >
-                            Düzenle
-                          </button>
-
-                          <button
-                            onClick={() => deleteLink(link.id)}
-                            className="text-slate-500 hover:text-red-400 text-xs px-2 py-1 rounded-md hover:bg-red-950/30 transition-colors"
-                          >
-                            Sil
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* PROFIL TAB */}
-        {tab === 'profil' && (
-          <form onSubmit={saveProfile} className="space-y-5">
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 space-y-4">
-              <h2 className="font-semibold text-slate-200">Profil Bilgileri</h2>
-
-              {/* Avatar upload */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Profil Fotoğrafı</label>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold overflow-hidden shrink-0">
-                    {user?.avatarUrl
-                      ? <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                      : user?.displayName[0].toUpperCase()
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200 mb-6 gap-1 flex-wrap">
+              {(['linkler', 'profil', 'analitik'] as Tab[]).map(t => (
+                <button
+                  key={t}
+                  onClick={() => {
+                    setTab(t)
+                    if (t === 'analitik' && !analytics) {
+                      fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)
                     }
-                  </div>
-                  <div>
-                    <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm text-white px-4 py-2 rounded-lg transition-colors inline-block">
-                      {avatarLoading ? 'Yükleniyor...' : 'Fotoğraf Seç'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async e => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          setAvatarLoading(true)
-                          const fd = new FormData()
-                          fd.append('avatar', file)
-                          const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
-                          if (res.ok) {
-                            const { avatarUrl } = await res.json()
-                            setUser(u => u ? { ...u, avatarUrl } : u)
-                          }
-                          setAvatarLoading(false)
-                        }}
-                      />
-                    </label>
-                    <p className="text-xs text-slate-500 mt-1">JPG, PNG, WebP — maks. 2MB</p>
-                  </div>
-                </div>
-              </div>
+                  }}
+                  className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                    tab === t
+                      ? 'border-indigo-500 text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {t === 'linkler' ? 'Linkler' : t === 'profil' ? 'Profil' : 'Analitik'}
+                </button>
+              ))}
+              {!user.isPro && (
+                <button
+                  onClick={() => setTab('pro')}
+                  className={`px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
+                    tab === 'pro'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-indigo-500 hover:text-indigo-600'
+                  }`}
+                >
+                  ⚡ Pro&apos;ya Geç
+                </button>
+              )}
+            </div>
 
-              {/* QR Code */}
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">QR Kod</label>
-                <div className="flex items-center gap-3">
+            {/* ── LINKLER TAB ── */}
+            {tab === 'linkler' && (
+              <div className="space-y-4">
+                <form onSubmit={addLink} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-gray-900 mb-4">Yeni Link Ekle</p>
+                  <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                    <input
+                      value={newTitle}
+                      onChange={e => setNewTitle(e.target.value)}
+                      placeholder="Başlık (örn: Instagram)"
+                      required
+                      className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                    />
+                    <input
+                      value={newUrl}
+                      onChange={e => setNewUrl(e.target.value)}
+                      placeholder="URL (örn: https://instagram.com/...)"
+                      required
+                      type="url"
+                      className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                    />
+                  </div>
+                  {addError && <p className="text-red-500 text-xs mb-3">{addError}</p>}
                   <button
-                    type="button"
-                    onClick={() => setShowQR(!showQR)}
-                    className="text-sm bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    type="submit"
+                    disabled={addLoading}
+                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
                   >
-                    {showQR ? 'Gizle' : 'QR Kodu Göster'}
+                    {addLoading ? 'Ekleniyor...' : '+ Ekle'}
                   </button>
-                  {showQR && (
-                    <a
-                      href={`/api/qr/${user?.username}`}
-                      download={`${user?.username}-qr.svg`}
-                      className="text-sm text-indigo-400 hover:text-white transition-colors"
-                    >
-                      İndir (SVG)
-                    </a>
+                  {!user.isPro && (
+                    <span className="text-xs text-gray-400 ml-3">{links.length}/5 link kullanıldı</span>
                   )}
-                </div>
-                {showQR && user && (
-                  <div className="mt-3 bg-[#0a0f1e] border border-slate-700 rounded-xl p-4 inline-block">
-                    <img src={`/api/qr/${user.username}`} alt="QR" className="w-40 h-40" />
+                </form>
+
+                {sortedLinks.length === 0 ? (
+                  <div className="text-center py-12 text-gray-400">
+                    <p className="text-4xl mb-3">🔗</p>
+                    <p>Henüz link eklemediniz.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {sortedLinks.map((link, idx) => (
+                      <div
+                        key={link.id}
+                        className={`bg-white border rounded-xl p-4 shadow-sm transition-colors ${
+                          link.isActive ? 'border-gray-200' : 'border-gray-100 opacity-60'
+                        }`}
+                      >
+                        {editId === link.id ? (
+                          <div className="space-y-2">
+                            <input
+                              value={editTitle}
+                              onChange={e => setEditTitle(e.target.value)}
+                              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
+                            <input
+                              value={editUrl}
+                              onChange={e => setEditUrl(e.target.value)}
+                              type="url"
+                              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                            />
+                            <div className="flex gap-2">
+                              <button onClick={() => saveEdit(link.id)} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors">
+                                Kaydet
+                              </button>
+                              <button onClick={() => setEditId(null)} className="text-gray-500 hover:text-gray-900 text-xs px-3 py-1.5 rounded-lg transition-colors">
+                                İptal
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col gap-0.5">
+                              <button
+                                onClick={() => moveLink(link.id, 'up')}
+                                disabled={idx === 0}
+                                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none"
+                              >▲</button>
+                              <button
+                                onClick={() => moveLink(link.id, 'down')}
+                                disabled={idx === sortedLinks.length - 1}
+                                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none"
+                              >▼</button>
+                            </div>
+
+                            <span className="text-lg shrink-0">{getPlatformIcon(link.url)}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm text-gray-900 truncate">{link.title}</p>
+                              <p className="text-gray-400 text-xs truncate">{link.url}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-xs text-gray-400">{link.clicks} tık</span>
+                              <button
+                                onClick={() => toggleActive(link.id, link.isActive)}
+                                className={`text-xs px-2 py-1 rounded-md transition-colors ${
+                                  link.isActive
+                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                    : 'bg-gray-100 text-gray-400 border border-gray-200'
+                                }`}
+                              >
+                                {link.isActive ? 'Aktif' : 'Pasif'}
+                              </button>
+                              <button
+                                onClick={() => { setEditId(link.id); setEditTitle(link.title); setEditUrl(link.url) }}
+                                className="text-gray-400 hover:text-gray-900 text-xs px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
+                              >
+                                Düzenle
+                              </button>
+                              <button
+                                onClick={() => deleteLink(link.id)}
+                                className="text-gray-400 hover:text-red-500 text-xs px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
+                              >
+                                Sil
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Görünen Ad</label>
-                <input
-                  value={profileForm.displayName}
-                  onChange={e => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
-                  required
-                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all"
-                />
-              </div>
+            {/* ── PROFİL TAB ── */}
+            {tab === 'profil' && (
+              <form onSubmit={saveProfile} className="space-y-5">
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h2 className="font-semibold text-gray-900">Profil Bilgileri</h2>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Bio <span className="text-slate-500 font-normal">(opsiyonel)</span>
-                </label>
-                <textarea
-                  value={profileForm.bio}
-                  onChange={e => setProfileForm(f => ({ ...f, bio: e.target.value }))}
-                  rows={3}
-                  placeholder="Kendinizi kısaca tanıtın..."
-                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none"
-                />
-              </div>
+                  {/* Avatar */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Profil Fotoğrafı</label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold overflow-hidden shrink-0">
+                        {user.avatarUrl
+                          ? <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                          : user.displayName[0].toUpperCase()
+                        }
+                      </div>
+                      <div>
+                        <label className="cursor-pointer bg-white hover:bg-gray-50 border border-gray-200 text-sm text-gray-700 px-4 py-2 rounded-lg transition-colors inline-block">
+                          {avatarLoading ? 'Yükleniyor...' : 'Fotoğraf Seç'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async e => {
+                              const file = e.target.files?.[0]
+                              if (!file) return
+                              setAvatarLoading(true)
+                              const fd = new FormData()
+                              fd.append('avatar', file)
+                              const res = await fetch('/api/profile/avatar', { method: 'POST', body: fd })
+                              if (res.ok) {
+                                const { avatarUrl } = await res.json()
+                                setUser(u => u ? { ...u, avatarUrl } : u)
+                                setPreviewKey(k => k + 1)
+                              }
+                              setAvatarLoading(false)
+                            }}
+                          />
+                        </label>
+                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — maks. 2MB</p>
+                      </div>
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Kullanıcı Adı</label>
-                <input
-                  value={user.username}
-                  disabled
-                  className="w-full bg-slate-800/30 border border-slate-700/50 rounded-xl px-4 py-3 text-sm text-slate-500 cursor-not-allowed"
-                />
-                <p className="text-xs text-slate-600 mt-1">Kullanıcı adı değiştirilemez.</p>
-              </div>
-            </div>
-
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-              <h2 className="font-semibold text-slate-200 mb-4">Tema</h2>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                {THEMES.map(t => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    disabled={t.pro && !user.isPro}
-                    onClick={() => !t.pro || user.isPro ? setProfileForm(f => ({ ...f, theme: t.id })) : null}
-                    className={`relative p-3 rounded-xl border text-sm font-medium transition-colors ${
-                      profileForm.theme === t.id
-                        ? 'border-indigo-500 bg-indigo-950/40 text-white'
-                        : 'border-slate-700 text-slate-400 hover:border-slate-500'
-                    } ${t.pro && !user.isPro ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    {t.label}
-                    {t.pro && (
-                      <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">PRO</span>
+                  {/* QR Code */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">QR Kod</label>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowQR(!showQR)}
+                        className="text-sm bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                      >
+                        {showQR ? 'Gizle' : 'QR Kodu Göster'}
+                      </button>
+                      {showQR && (
+                        <a
+                          href={`/api/qr/${user.username}`}
+                          download={`${user.username}-qr.svg`}
+                          className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                          İndir (SVG)
+                        </a>
+                      )}
+                    </div>
+                    {showQR && (
+                      <div className="mt-3 bg-white border border-gray-200 rounded-xl p-4 inline-block shadow-sm">
+                        <img src={`/api/qr/${user.username}`} alt="QR" className="w-40 h-40" />
+                      </div>
                     )}
-                  </button>
-                ))}
-              </div>
-            </div>
+                  </div>
 
-            {profileMsg && (
-              <div className={`rounded-lg px-4 py-3 text-sm ${
-                profileMsg.includes('!') ? 'bg-emerald-950/40 border border-emerald-800/60 text-emerald-400' : 'bg-red-950/40 border border-red-800/60 text-red-400'
-              }`}>
-                {profileMsg}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={profileLoading}
-              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
-            >
-              {profileLoading ? 'Kaydediliyor...' : 'Kaydet'}
-            </button>
-          </form>
-        )}
-
-        {/* ANALITIK TAB */}
-        {tab === 'analitik' && (
-          <div className="space-y-4">
-            {/* Period selector */}
-            <div className="flex gap-2">
-              {[7, 14, 30].map(d => (
-                <button
-                  key={d}
-                  onClick={() => {
-                    setAnalyticsDays(d)
-                    fetch(`/api/analytics?days=${d}`).then(r => r.json()).then(setAnalytics)
-                  }}
-                  className={`text-xs px-4 py-1.5 rounded-lg font-medium transition-colors ${
-                    analyticsDays === d ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  {d} gün
-                </button>
-              ))}
-              <button
-                onClick={() => fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)}
-                className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 text-slate-500 hover:text-white transition-colors ml-auto"
-              >
-                ↻ Yenile
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
-                <div className="text-2xl font-black text-white mb-1">{analytics?.totalClicks ?? totalClicks}</div>
-                <div className="text-xs text-slate-500">Dönem Tıklama</div>
-              </div>
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
-                <div className="text-2xl font-black text-white mb-1">{links.reduce((s, l) => s + l.clicks, 0)}</div>
-                <div className="text-xs text-slate-500">Toplam Tıklama</div>
-              </div>
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
-                <div className="text-2xl font-black text-white mb-1">{links.length}</div>
-                <div className="text-xs text-slate-500">Toplam Link</div>
-              </div>
-            </div>
-
-            {/* Chart */}
-            {analytics && analytics.daily.length > 0 && (
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5">
-                <p className="text-sm font-semibold text-slate-200 mb-4">Günlük Tıklama Grafiği</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <AreaChart data={analytics.daily}>
-                    <defs>
-                      <linearGradient id="clickGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                      tickFormatter={v => v.slice(5)}
-                      axisLine={false}
-                      tickLine={false}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Görünen Ad</label>
+                    <input
+                      value={profileForm.displayName}
+                      onChange={e => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
+                      required
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
                     />
-                    <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#fff' }}
-                      labelFormatter={v => `Tarih: ${v}`}
-                      formatter={(v: number) => [`${v} tık`, 'Tıklama']}
-                    />
-                    <Area type="monotone" dataKey="clicks" stroke="#6366f1" strokeWidth={2} fill="url(#clickGrad)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+                  </div>
 
-            {/* Link performance */}
-            {sortedLinks.length === 0 ? (
-              <div className="text-center py-8 text-slate-500"><p>Henüz link eklemediniz.</p></div>
-            ) : (
-              <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-slate-800">
-                  <p className="text-sm font-semibold text-slate-200">Link Performansı</p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Bio <span className="text-gray-400 font-normal">(opsiyonel)</span>
+                    </label>
+                    <textarea
+                      value={profileForm.bio}
+                      onChange={e => setProfileForm(f => ({ ...f, bio: e.target.value }))}
+                      rows={3}
+                      placeholder="Kendinizi kısaca tanıtın..."
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Kullanıcı Adı</label>
+                    <input
+                      value={user.username}
+                      disabled
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-400 cursor-not-allowed"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Kullanıcı adı değiştirilemez.</p>
+                  </div>
                 </div>
-                <div className="divide-y divide-slate-800/60">
-                  {[...sortedLinks].sort((a, b) => b.clicks - a.clicks).map(link => (
-                    <div key={link.id} className="px-5 py-3.5">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">{getPlatformIcon(link.url)}</span>
-                          <p className="text-sm font-medium text-white truncate">{link.title}</p>
+
+                {/* Preset themes */}
+                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                  <h2 className="font-semibold text-gray-900 mb-4">Hazır Tema</h2>
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                    {PRESET_THEMES.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        disabled={t.pro && !user.isPro}
+                        onClick={() => !t.pro || user.isPro ? setProfileForm(f => ({ ...f, theme: t.id })) : null}
+                        className={`relative p-3 rounded-xl border text-sm font-medium transition-colors ${
+                          profileForm.theme === t.id
+                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        } ${t.pro && !user.isPro ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        {t.label}
+                        {t.pro && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">PRO</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Theme editor - Pro */}
+                <div className={`bg-white border border-gray-200 rounded-2xl p-6 shadow-sm ${!user.isPro ? 'opacity-60' : ''}`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="font-semibold text-gray-900">Tema Editörü</h2>
+                    {!user.isPro && (
+                      <span className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-full font-semibold">PRO</span>
+                    )}
+                  </div>
+
+                  {/* Button style */}
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-gray-500 mb-2">Buton Şekli</label>
+                    <div className="flex gap-2">
+                      {BTN_STYLES.map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          disabled={!user.isPro}
+                          onClick={() => updateThemeConfig({ btnStyle: s.id as ThemeConfig['btnStyle'] })}
+                          className={`flex-1 py-2.5 border text-xs font-medium transition-colors ${s.cls} ${
+                            profileForm.themeConfig.btnStyle === s.id
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          } disabled:cursor-not-allowed`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Font family */}
+                  <div className="mb-5">
+                    <label className="block text-xs font-medium text-gray-500 mb-2">Yazı Tipi</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {FONTS.map(f => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          disabled={!user.isPro}
+                          onClick={() => updateThemeConfig({ fontFamily: f.id as ThemeConfig['fontFamily'] })}
+                          style={f.style}
+                          className={`py-2.5 px-3 border text-sm transition-colors rounded-xl ${
+                            profileForm.themeConfig.fontFamily === f.id
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                          } disabled:cursor-not-allowed`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom background gradient */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <label className="text-xs font-medium text-gray-500">Özel Arka Plan Rengi</label>
+                      <button
+                        type="button"
+                        disabled={!user.isPro}
+                        onClick={() => updateThemeConfig({ bgGradient: !profileForm.themeConfig.bgGradient })}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:cursor-not-allowed ${
+                          profileForm.themeConfig.bgGradient ? 'bg-indigo-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                          profileForm.themeConfig.bgGradient ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                        }`} />
+                      </button>
+                    </div>
+
+                    {profileForm.themeConfig.bgGradient && (
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-400 mb-1.5">Renk 1</p>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="color"
+                              value={profileForm.themeConfig.bgFrom || '#0a0f1e'}
+                              disabled={!user.isPro}
+                              onChange={e => updateThemeConfig({ bgFrom: e.target.value })}
+                              className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                            />
+                            <input
+                              value={profileForm.themeConfig.bgFrom || '#0a0f1e'}
+                              disabled={!user.isPro}
+                              onChange={e => updateThemeConfig({ bgFrom: e.target.value })}
+                              placeholder="#0a0f1e"
+                              maxLength={7}
+                              className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                            />
+                          </div>
                         </div>
-                        <span className="text-sm font-bold text-indigo-400 ml-3 shrink-0">{link.clicks} tık</span>
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-400 mb-1.5">Renk 2</p>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="color"
+                              value={profileForm.themeConfig.bgTo || '#6366f1'}
+                              disabled={!user.isPro}
+                              onChange={e => updateThemeConfig({ bgTo: e.target.value })}
+                              className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                            />
+                            <input
+                              value={profileForm.themeConfig.bgTo || '#6366f1'}
+                              disabled={!user.isPro}
+                              onChange={e => updateThemeConfig({ bgTo: e.target.value })}
+                              placeholder="#6366f1"
+                              maxLength={7}
+                              className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-indigo-600 rounded-full transition-all"
-                          style={{ width: totalClicks > 0 ? `${(link.clicks / totalClicks) * 100}%` : '0%' }}
+                    )}
+
+                    {/* Gradient preview */}
+                    {profileForm.themeConfig.bgGradient && (
+                      <div
+                        className="mt-3 h-10 rounded-xl border border-gray-200"
+                        style={{
+                          background: `linear-gradient(135deg, ${profileForm.themeConfig.bgFrom || '#0a0f1e'}, ${profileForm.themeConfig.bgTo || '#6366f1'})`
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {profileMsg && (
+                  <div className={`rounded-lg px-4 py-3 text-sm ${
+                    profileMsg.includes('!') ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-600'
+                  }`}>
+                    {profileMsg}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={profileLoading}
+                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+                >
+                  {profileLoading ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </form>
+            )}
+
+            {/* ── ANALİTİK TAB ── */}
+            {tab === 'analitik' && (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  {[7, 14, 30].map(d => (
+                    <button
+                      key={d}
+                      onClick={() => {
+                        setAnalyticsDays(d)
+                        fetch(`/api/analytics?days=${d}`).then(r => r.json()).then(setAnalytics)
+                      }}
+                      className={`text-xs px-4 py-1.5 rounded-lg font-medium transition-colors ${
+                        analyticsDays === d ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      {d} gün
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-gray-900 transition-colors ml-auto"
+                  >
+                    ↻ Yenile
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                    <div className="text-2xl font-black text-gray-900 mb-1">{analytics?.totalClicks ?? totalClicks}</div>
+                    <div className="text-xs text-gray-400">Dönem Tıklama</div>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                    <div className="text-2xl font-black text-gray-900 mb-1">{links.reduce((s, l) => s + l.clicks, 0)}</div>
+                    <div className="text-xs text-gray-400">Toplam Tıklama</div>
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                    <div className="text-2xl font-black text-gray-900 mb-1">{links.length}</div>
+                    <div className="text-xs text-gray-400">Toplam Link</div>
+                  </div>
+                </div>
+
+                {analytics && analytics.daily.length > 0 && (
+                  <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                    <p className="text-sm font-semibold text-gray-900 mb-4">Günlük Tıklama Grafiği</p>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <AreaChart data={analytics.daily}>
+                        <defs>
+                          <linearGradient id="clickGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fill: '#64748b', fontSize: 11 }}
+                          tickFormatter={v => v.slice(5)}
+                          axisLine={false}
+                          tickLine={false}
                         />
-                      </div>
+                        <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', color: '#111827' }}
+                          labelFormatter={v => `Tarih: ${v}`}
+                          formatter={(v: number) => [`${v} tık`, 'Tıklama']}
+                        />
+                        <Area type="monotone" dataKey="clicks" stroke="#6366f1" strokeWidth={2} fill="url(#clickGrad)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {sortedLinks.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400"><p>Henüz link eklemediniz.</p></div>
+                ) : (
+                  <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="px-5 py-3.5 border-b border-gray-100">
+                      <p className="text-sm font-semibold text-gray-900">Link Performansı</p>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {[...sortedLinks].sort((a, b) => b.clicks - a.clicks).map(link => (
+                        <div key={link.id} className="px-5 py-3.5">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{getPlatformIcon(link.url)}</span>
+                              <p className="text-sm font-medium text-gray-900 truncate">{link.title}</p>
+                            </div>
+                            <span className="text-sm font-bold text-indigo-600 ml-3 shrink-0">{link.clicks} tık</span>
+                          </div>
+                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-indigo-600 rounded-full transition-all"
+                              style={{ width: totalClicks > 0 ? `${(link.clicks / totalClicks) * 100}%` : '0%' }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── PRO TAB ── */}
+            {tab === 'pro' && (
+              <div className="space-y-5">
+                <div className="relative bg-gradient-to-br from-indigo-600 to-violet-600 border border-indigo-500 rounded-2xl p-8 text-center overflow-hidden">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                  <div className="relative">
+                    <div className="text-5xl mb-3">⚡</div>
+                    <h2 className="text-2xl font-bold mb-2 text-white">Pro&apos;ya Yükselt</h2>
+                    <p className="text-indigo-200 mb-6">Ayda sadece <strong className="text-white">₺59</strong> ile tüm özellikleri açın.</p>
+                    <Link
+                      href="/pro"
+                      className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors"
+                    >
+                      Pro Planı İncele &rarr;
+                    </Link>
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {[
+                    { icon: '🔗', title: 'Sınırsız Link', desc: 'Ücretsiz plandaki 5 link sınırını kaldırın.' },
+                    { icon: '🎨', title: 'Tema Editörü', desc: 'Gradient arka plan, özel renkler, buton şekli, font seçimi.' },
+                    { icon: '📊', title: 'Detaylı Analitik', desc: 'Günlük, haftalık tıklama takibi.' },
+                  ].map(f => (
+                    <div key={f.title} className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                      <div className="text-3xl mb-3">{f.icon}</div>
+                      <h3 className="font-semibold text-sm mb-1 text-gray-900">{f.title}</h3>
+                      <p className="text-gray-500 text-xs">{f.desc}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-          </div>
-        )}
 
-        {/* PRO TAB */}
-        {tab === 'pro' && (
-          <div className="space-y-5">
-            <div className="relative bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-700/60 rounded-2xl p-8 text-center overflow-hidden">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-600/10 rounded-full blur-2xl" />
-              <div className="relative">
-                <div className="text-5xl mb-3">⚡</div>
-                <h2 className="text-2xl font-bold mb-2">Pro&apos;ya Yükselt</h2>
-                <p className="text-slate-400 mb-6">Ayda sadece <strong className="text-white">₺59</strong> ile tüm özellikleri açın.</p>
-                <Link
-                  href="/pro"
-                  className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors"
-                >
-                  Pro Planı İncele &rarr;
-                </Link>
+          </div>
+
+          {/* ─── Preview panel (desktop only) ─── */}
+          <div className="hidden lg:block w-[268px] shrink-0 sticky top-24 self-start">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Önizleme</p>
+              <button
+                onClick={() => setPreviewKey(k => k + 1)}
+                className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                title="Yenile"
+              >
+                ↻ Yenile
+              </button>
+            </div>
+
+            {/* iPhone frame */}
+            <div className="relative mx-auto" style={{ width: '260px' }}>
+              <div className="bg-gray-900 rounded-[44px] p-[10px] border-[3px] border-gray-700 shadow-2xl shadow-gray-400/30">
+                {/* Dynamic island */}
+                <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-950 rounded-full z-10 border border-gray-800" />
+                {/* Screen */}
+                <div className="rounded-[36px] overflow-hidden bg-gray-950" style={{ height: '520px' }}>
+                  <iframe
+                    key={previewKey}
+                    src={`/${user.username}`}
+                    className="w-full h-full border-none"
+                    style={{ pointerEvents: 'none', transform: 'scale(0.85)', transformOrigin: 'top center', width: '118%', marginLeft: '-9%' }}
+                    title="Profil Önizleme"
+                  />
+                </div>
+                {/* Home indicator */}
+                <div className="mt-2.5 mx-auto w-16 h-1 bg-gray-600 rounded-full" />
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-4">
-              {[
-                { icon: '🔗', title: 'Sınırsız Link', desc: 'Ücretsiz plandaki 5 link sınırını kaldırın.' },
-                { icon: '🎨', title: 'Tüm Temalar', desc: 'Mor, pembe, yeşil — 5 tema seçeneği.' },
-                { icon: '📊', title: 'Detaylı Analitik', desc: 'Günlük, haftalık tıklama takibi.' },
-              ].map(f => (
-                <div key={f.title} className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 text-center">
-                  <div className="text-3xl mb-3">{f.icon}</div>
-                  <h3 className="font-semibold text-sm mb-1">{f.title}</h3>
-                  <p className="text-slate-500 text-xs">{f.desc}</p>
-                </div>
-              ))}
-            </div>
+            <p className="text-center text-xs text-gray-400 mt-3">
+              Kaydet&apos;e bastıktan sonra<br />önizleme güncellenir.
+            </p>
           </div>
-        )}
 
+        </div>
       </main>
     </div>
   )

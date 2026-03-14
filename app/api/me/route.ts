@@ -16,7 +16,9 @@ export async function GET() {
       bio: true,
       avatarUrl: true,
       theme: true,
+      themeConfig: true,
       isPro: true,
+      onboardingDone: true,
       createdAt: true,
     },
   })

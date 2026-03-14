@@ -2,6 +2,14 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { detectPlatform } from '@/lib/social-icons'
 
+interface ThemeConfig {
+  btnStyle?: 'rounded' | 'pill' | 'square'
+  fontFamily?: 'inter' | 'poppins' | 'raleway' | 'playfair'
+  bgGradient?: boolean
+  bgFrom?: string
+  bgTo?: string
+}
+
 const THEMES: Record<string, { bg: string; card: string; btn: string; text: string; subtext: string }> = {
   koyu: {
     bg: 'min-h-screen bg-[#0a0f1e]',
@@ -40,6 +48,19 @@ const THEMES: Record<string, { bg: string; card: string; btn: string; text: stri
   },
 }
 
+const GOOGLE_FONTS: Record<string, string> = {
+  poppins: 'Poppins:wght@400;500;600;700',
+  raleway: 'Raleway:wght@400;500;600;700',
+  playfair: 'Playfair+Display:wght@400;500;600;700',
+}
+
+const FONT_STACKS: Record<string, string> = {
+  inter: "'Inter', sans-serif",
+  poppins: "'Poppins', sans-serif",
+  raleway: "'Raleway', sans-serif",
+  playfair: "'Playfair Display', serif",
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params
   const user = await db.user.findUnique({ where: { username } })
@@ -65,7 +86,26 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   if (!user) notFound()
 
-  const theme = THEMES[user.theme] ?? THEMES.koyu
+  const preset = THEMES[user.theme] ?? THEMES.koyu
+  const tc = (user.isPro && user.themeConfig && typeof user.themeConfig === 'object' && !Array.isArray(user.themeConfig)
+    ? user.themeConfig
+    : {}) as ThemeConfig
+
+  // Background
+  const hasCusBg = tc.bgGradient && tc.bgFrom
+  const bgStyle = hasCusBg
+    ? { background: `linear-gradient(135deg, ${tc.bgFrom}, ${tc.bgTo || tc.bgFrom})` }
+    : undefined
+  const bgClass = hasCusBg ? 'min-h-screen' : preset.bg
+
+  // Button shape
+  const btnRadius = tc.btnStyle === 'pill' ? 'rounded-full' : tc.btnStyle === 'square' ? 'rounded-lg' : 'rounded-2xl'
+  const btnClass = `${preset.btn} ${btnRadius}`
+
+  // Font
+  const fontFamily = tc.fontFamily ? FONT_STACKS[tc.fontFamily] : undefined
+  const googleFontKey = tc.fontFamily && tc.fontFamily !== 'inter' ? tc.fontFamily : null
+
   const initials = user.displayName
     .split(' ')
     .map(w => w[0])
@@ -74,8 +114,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     .toUpperCase()
 
   return (
-    <div className={theme.bg}>
-      <div className={`${theme.card} max-w-md mx-auto px-5 py-16`}>
+    <div className={bgClass} style={{ ...bgStyle, fontFamily }}>
+      {googleFontKey && (
+        // eslint-disable-next-line @next/next/no-page-custom-font
+        <link
+          href={`https://fonts.googleapis.com/css2?family=${GOOGLE_FONTS[googleFontKey]}&display=swap`}
+          rel="stylesheet"
+        />
+      )}
+      <div className={`${preset.card} max-w-md mx-auto px-5 py-16`}>
 
         {/* Avatar */}
         <div className="flex justify-center mb-4">
@@ -91,15 +138,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
         {/* Name & bio */}
         <div className="text-center mb-8">
-          <h1 className={`text-xl font-bold ${theme.text}`}>{user.displayName}</h1>
+          <h1 className={`text-xl font-bold ${preset.text}`}>{user.displayName}</h1>
           {user.bio && (
-            <p className={`mt-1.5 text-sm leading-relaxed ${theme.subtext}`}>{user.bio}</p>
+            <p className={`mt-1.5 text-sm leading-relaxed ${preset.subtext}`}>{user.bio}</p>
           )}
         </div>
 
         {/* Links */}
         {user.links.length === 0 ? (
-          <p className={`text-center text-sm ${theme.subtext}`}>Henüz link eklenmemiş.</p>
+          <p className={`text-center text-sm ${preset.subtext}`}>Henüz link eklenmemiş.</p>
         ) : (
           <div className="space-y-3">
             {user.links.map(link => {
@@ -108,7 +155,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                 <a
                   key={link.id}
                   href={`/api/click/${link.id}`}
-                  className={`flex items-center justify-center gap-2.5 w-full py-3.5 px-5 rounded-2xl font-semibold text-sm transition-all duration-200 ${theme.btn}`}
+                  className={`flex items-center justify-center gap-2.5 w-full py-3.5 px-5 font-semibold text-sm transition-all duration-200 ${btnClass}`}
                 >
                   {platform && <span className="text-base">{platform.icon}</span>}
                   {link.title}
@@ -120,7 +167,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
         {/* Footer */}
         <div className="mt-12 text-center">
-          <a href="/" className={`text-xs ${theme.subtext} hover:opacity-80 transition-opacity`}>
+          <a href="/" className={`text-xs ${preset.subtext} hover:opacity-80 transition-opacity`}>
             LinkBio Pro ile oluşturuldu
           </a>
         </div>
