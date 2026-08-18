@@ -41,6 +41,8 @@ model Link {
   isActive    Boolean    @default(true)
   createdAt   DateTime   @default(now())
   clickLogs   ClickLog[]
+
+  @@index([userId, order])
 }
 
 model LinkGroup {
@@ -60,4 +62,6 @@ model ClickLog {
   referrer  String?
   country   String?
   device    String?
+
+  @@index([linkId, clickedAt])
 }

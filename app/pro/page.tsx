@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { COMPANY } from '@/lib/company'
 
 interface User {
   username: string
@@ -18,7 +19,7 @@ export default function ProPage() {
   }, [])
 
   function copyEmail() {
-    navigator.clipboard.writeText('destek@linkbiopro.com')
+    navigator.clipboard.writeText(COMPANY.email)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -110,31 +111,31 @@ export default function ProPage() {
           </div>
         </div>
 
-        {/* Payment steps */}
+        {/* Payment status */}
         <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-7 mb-6">
           <h2 className="font-semibold text-white mb-5">Nasıl Pro Olunur?</h2>
           <div className="space-y-5">
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0">1</div>
               <div>
-                <p className="font-medium text-sm text-white mb-1">Ödemeyi yapın</p>
-                <p className="text-slate-400 text-sm">Aşağıdaki banka hesabına ₺59 havale/EFT yapın.</p>
-                <div className="mt-3 bg-slate-800/60 border border-slate-700 rounded-xl p-4 text-sm font-mono space-y-1">
-                  <p className="text-slate-400"><span className="text-slate-500">Banka:</span> Ziraat Bankası</p>
-                  <p className="text-slate-400"><span className="text-slate-500">IBAN:</span> <span className="text-white">TR00 0001 0000 0000 0000 0000 00</span></p>
-                  <p className="text-slate-400"><span className="text-slate-500">Ad:</span> LinkBio Pro</p>
-                  <p className="text-yellow-400 text-xs mt-2">⚠ Açıklama kısmına kullanıcı adınızı yazın: <strong>{user?.username || 'kullanici_adiniz'}</strong></p>
-                </div>
+                <p className="font-medium text-sm text-white mb-1">Bize ulaşın</p>
+                <p className="text-slate-400 text-sm">
+                  Kredi/banka kartıyla online ödeme çok yakında bu sayfadan
+                  aktif olacak. Şimdilik Pro&apos;ya geçmek için aşağıdaki
+                  e-postadan kullanıcı adınızla bize yazın, ödeme talimatını
+                  size iletelim.
+                </p>
               </div>
             </div>
 
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold shrink-0">2</div>
               <div>
-                <p className="font-medium text-sm text-white mb-1">Bize bildirin</p>
+                <p className="font-medium text-sm text-white mb-1">Ödemeyi tamamlayın</p>
                 <p className="text-slate-400 text-sm">
-                  Ödeme yaptıktan sonra e-posta veya aşağıdaki iletişim kanallarından bize ulaşın.
-                  Genellikle <strong className="text-white">1-2 saat</strong> içinde Pro hesabınız aktif edilir.
+                  Size ilettiğimiz talimata göre ödemeyi yapın. Ödeme
+                  onaylandıktan sonra genellikle <strong className="text-white">1-2 saat</strong> içinde
+                  Pro hesabınız aktif edilir.
                 </p>
               </div>
             </div>
@@ -150,33 +151,21 @@ export default function ProPage() {
         </div>
 
         {/* Contact */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <button
-            onClick={copyEmail}
-            className="flex items-center gap-3 bg-slate-900/50 border border-slate-800 hover:border-indigo-600 rounded-2xl p-5 transition-colors text-left"
-          >
-            <div className="text-2xl">📧</div>
-            <div>
-              <p className="font-medium text-sm text-white">E-posta</p>
-              <p className="text-slate-400 text-xs mt-0.5">
-                {copied ? <span className="text-emerald-400">Kopyalandı!</span> : 'destek@linkbiopro.com'}
-              </p>
-            </div>
-          </button>
-
-          <a
-            href="https://t.me/linkbiopro"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 bg-slate-900/50 border border-slate-800 hover:border-indigo-600 rounded-2xl p-5 transition-colors"
-          >
-            <div className="text-2xl">💬</div>
-            <div>
-              <p className="font-medium text-sm text-white">Telegram</p>
-              <p className="text-slate-400 text-xs mt-0.5">@linkbiopro</p>
-            </div>
-          </a>
-        </div>
+        <button
+          onClick={copyEmail}
+          className="w-full flex items-center gap-3 bg-slate-900/50 border border-slate-800 hover:border-indigo-600 rounded-2xl p-5 transition-colors text-left"
+        >
+          <div className="text-2xl">📧</div>
+          <div>
+            <p className="font-medium text-sm text-white">E-posta ile ulaşın</p>
+            <p className="text-slate-400 text-xs mt-0.5">
+              {copied ? <span className="text-emerald-400">Kopyalandı!</span> : COMPANY.email}
+            </p>
+            {user?.username && (
+              <p className="text-slate-500 text-xs mt-1">Kullanıcı adınız: {user.username}</p>
+            )}
+          </div>
+        </button>
 
       </main>
     </div>

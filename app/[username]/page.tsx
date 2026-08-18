@@ -93,8 +93,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
 
   if (!user) notFound()
 
+  // Süresi dolmuş Pro üyelikte Pro'ya özel görünüm devre dışı kalır
+  const proActive = user.isPro && (!user.proExpiresAt || user.proExpiresAt > new Date())
+
   const preset = THEMES[user.theme] ?? THEMES.koyu
-  const tc = (user.isPro && user.themeConfig && typeof user.themeConfig === 'object' && !Array.isArray(user.themeConfig)
+  const tc = (proActive && user.themeConfig && typeof user.themeConfig === 'object' && !Array.isArray(user.themeConfig)
     ? user.themeConfig
     : {}) as ThemeConfig
 

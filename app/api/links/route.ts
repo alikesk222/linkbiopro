@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { isValidHttpUrl } from '@/lib/validate'
 
 const FREE_LIMIT = 5
+const TITLE_MAX = 80
 
 export async function GET() {
   const session = await getSession()
@@ -30,9 +32,21 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const { title, url } = await req.json()
-  if (!title?.trim() || !url?.trim()) {
+  const body = await req.json().catch(() => null)
+  const title = typeof body?.title === 'string' ? body.title.trim() : ''
+  const url = typeof body?.url === 'string' ? body.url.trim() : ''
+
+  if (!title || !url) {
     return NextResponse.json({ error: 'Baslik ve URL zorunludur' }, { status: 400 })
+  }
+  if (title.length > TITLE_MAX) {
+    return NextResponse.json({ error: `Baslik en fazla ${TITLE_MAX} karakter olabilir` }, { status: 400 })
+  }
+  if (!isValidHttpUrl(url)) {
+    return NextResponse.json(
+      { error: 'Gecerli bir http:// veya https:// adresi girin' },
+      { status: 400 }
+    )
   }
 
   const maxOrder = await db.link.aggregate({
@@ -42,7 +56,7 @@ export async function POST(req: NextRequest) {
   const order = (maxOrder._max.order ?? -1) + 1
 
   const link = await db.link.create({
-    data: { userId: session.userId, title: title.trim(), url: url.trim(), order },
+    data: { userId: session.userId, title, url, order },
   })
   return NextResponse.json(link, { status: 201 })
 }

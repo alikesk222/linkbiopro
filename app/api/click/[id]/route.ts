@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isValidHttpUrl } from '@/lib/validate'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
   const link = await db.link.findUnique({ where: { id } })
-  if (!link || !link.isActive) {
+  // Yalnızca http(s) adreslerine yönlendir (eski kayıtlarda kalmış olabilecek
+  // geçersiz şemalara karşı koruma)
+  if (!link || !link.isActive || !isValidHttpUrl(link.url)) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 

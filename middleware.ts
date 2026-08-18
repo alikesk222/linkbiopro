@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(COOKIE)?.value
   const valid = token ? await verifyToken(token) : null
 
-  if (pathname.startsWith('/dashboard')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
     if (!valid) {
       return NextResponse.redirect(new URL('/giris', request.url))
     }

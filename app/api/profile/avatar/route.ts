@@ -3,9 +3,11 @@ import { getSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import sharp from 'sharp'
 
 const UPLOAD_DIR = join(process.cwd(), 'public', 'uploads', 'avatars')
 const MAX_SIZE = 2 * 1024 * 1024 // 2MB
+const AVATAR_PX = 400
 
 export async function POST(req: NextRequest) {
   const session = await getSession()
@@ -22,14 +24,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Dosya 2MB\'dan büyük olamaz' }, { status: 400 })
   }
 
-  const ext = file.type.split('/')[1].replace('jpeg', 'jpg')
-  const filename = `${session.userId}.${ext}`
+  // sharp ile yeniden kodlama: gerçek içerik doğrulaması + sabit boyut + optimizasyon.
+  // Görsel olmayan/bozuk dosyalar burada reddedilir.
+  let processed: Buffer
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer())
+    processed = await sharp(buffer, { limitInputPixels: 25_000_000 })
+      .rotate()
+      .resize(AVATAR_PX, AVATAR_PX, { fit: 'cover' })
+      .webp({ quality: 85 })
+      .toBuffer()
+  } catch {
+    return NextResponse.json({ error: 'Dosya geçerli bir görsel değil' }, { status: 400 })
+  }
 
+  const filename = `${session.userId}.webp`
   await mkdir(UPLOAD_DIR, { recursive: true })
-  const buffer = Buffer.from(await file.arrayBuffer())
-  await writeFile(join(UPLOAD_DIR, filename), buffer)
+  await writeFile(join(UPLOAD_DIR, filename), processed)
 
-  const avatarUrl = `/uploads/avatars/${filename}`
+  // Cache'i kırmak için sürüm parametresi
+  const avatarUrl = `/uploads/avatars/${filename}?v=${Date.now()}`
   await db.user.update({
     where: { id: session.userId },
     data: { avatarUrl },

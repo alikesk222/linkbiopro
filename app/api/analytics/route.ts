@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Yetkisiz' }, { status: 401 })
 
-  const days = parseInt(req.nextUrl.searchParams.get('days') || '30')
+  const parsed = parseInt(req.nextUrl.searchParams.get('days') || '30', 10)
+  const days = Math.min(90, Math.max(1, Number.isNaN(parsed) ? 30 : parsed))
 
   const since = new Date()
   since.setDate(since.getDate() - days)

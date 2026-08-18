@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 import { Logo } from '@/components/Logo'
+import { SiteFooter } from '@/components/SiteFooter'
 
 const FEATURES = [
   {
@@ -77,12 +78,6 @@ const STEPS = [
   { num: '01', title: 'Ücretsiz Kayıt Olun', desc: 'E-posta adresinizle saniyeler içinde hesap oluşturun. Kredi kartı gerekmez.' },
   { num: '02', title: 'Linklerinizi Ekleyin', desc: 'Instagram, YouTube, web siteniz, Etsy mağazanız — istediğiniz her şeyi ekleyin.' },
   { num: '03', title: 'Bio\'nuza Yapıştırın', desc: 'Profilinizin adresini Instagram veya TikTok bio\'nuzda paylaşın.' },
-]
-
-const STATS = [
-  { value: '10K+', label: 'Aktif Kullanıcı' },
-  { value: '2M+', label: 'Toplam Tıklama' },
-  { value: '99.9%', label: 'Uptime' },
 ]
 
 function useScrollReveal() {
@@ -260,20 +255,6 @@ export default function LandingPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Stats bar */}
-        <section className="py-12 border-y border-gray-100 bg-gradient-to-r from-gray-50 to-indigo-50/30">
-          <div className="max-w-5xl mx-auto px-6">
-            <div className="grid grid-cols-3 gap-8 divide-x divide-gray-200">
-              {STATS.map((s, i) => (
-                <RevealSection key={s.label} delay={i * 100} className="text-center">
-                  <p className="text-3xl font-black text-gray-900 mb-1">{s.value}</p>
-                  <p className="text-sm text-gray-500">{s.label}</p>
-                </RevealSection>
-              ))}
             </div>
           </div>
         </section>
@@ -465,17 +446,7 @@ export default function LandingPage() {
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 py-10 px-6 bg-white">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-          <Logo />
-          <p>&copy; {new Date().getFullYear()} LinkBio Pro. Tüm hakları saklıdır.</p>
-          <div className="flex items-center gap-6">
-            <a href="#nasil-calisir" className="hover:text-gray-600 transition-colors">Nasıl Çalışır</a>
-            <a href="#fiyatlar" className="hover:text-gray-600 transition-colors">Fiyatlar</a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   )
