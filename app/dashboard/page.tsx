@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { getPlatformIcon } from '@/lib/social-icons'
+import { Logo } from '@/components/Logo'
 
 interface ThemeConfig {
   btnStyle?: 'rounded' | 'pill' | 'square'
@@ -232,8 +233,8 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-paper">
+        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -242,23 +243,23 @@ export default function DashboardPage() {
   const totalClicks = links.reduce((sum, l) => sum + l.clicks, 0)
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+    <div className="min-h-screen flex flex-col bg-paper text-ink">
       {/* Navbar */}
-      <header className="border-b border-gray-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
+      <header className="border-b border-line bg-paper/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/"><div className="flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">L</div><span className="font-bold text-gray-900 text-lg tracking-tight">LinkBio<span className="text-indigo-600">.Pro</span></span></div></Link>
+          <Link href="/"><Logo /></Link>
           <div className="flex items-center gap-4">
             <a
               href={`/${user.username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors hidden sm:block font-medium"
+              className="text-sm text-brand-600 hover:text-brand-700 transition-colors hidden sm:block font-medium"
             >
               /{user.username} &rarr;
             </a>
             <button
               onClick={logout}
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+              className="text-sm text-ink-soft hover:text-ink transition-colors"
             >
               Çıkış
             </button>
@@ -273,10 +274,10 @@ export default function DashboardPage() {
           <div className="flex-1 min-w-0">
 
             {/* Profile URL banner */}
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl px-5 py-3.5 mb-6 flex items-center justify-between gap-3">
+            <div className="bg-brand-50 border border-brand-200 rounded-xl px-5 py-3.5 mb-6 flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs text-indigo-600 font-medium mb-0.5">Profil adresiniz</p>
-                <p className="text-indigo-900 font-mono text-sm">
+                <p className="text-xs text-brand-600 font-medium mb-0.5">Profil adresiniz</p>
+                <p className="text-ink font-mono text-sm">
                   {typeof window !== 'undefined' ? window.location.origin : ''}/{user.username}
                 </p>
               </div>
@@ -284,14 +285,14 @@ export default function DashboardPage() {
                 href={`/${user.username}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+                className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
               >
                 Görüntüle
               </a>
             </div>
 
             {/* Tabs */}
-            <div className="flex border-b border-gray-200 mb-6 gap-1 flex-wrap">
+            <div className="flex border-b border-line mb-6 gap-1 flex-wrap">
               {(['linkler', 'profil', 'analitik'] as Tab[]).map(t => (
                 <button
                   key={t}
@@ -303,8 +304,8 @@ export default function DashboardPage() {
                   }}
                   className={`px-5 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                     tab === t
-                      ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-900'
+                      ? 'border-brand-500 text-ink'
+                      : 'border-transparent text-ink-soft hover:text-ink'
                   }`}
                 >
                   {t === 'linkler' ? 'Linkler' : t === 'profil' ? 'Profil' : 'Analitik'}
@@ -315,8 +316,8 @@ export default function DashboardPage() {
                   onClick={() => setTab('pro')}
                   className={`px-5 py-2.5 text-sm font-semibold transition-colors border-b-2 -mb-px ${
                     tab === 'pro'
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-indigo-500 hover:text-indigo-600'
+                      ? 'border-brand-500 text-brand-600'
+                      : 'border-transparent text-brand-500 hover:text-brand-600'
                   }`}
                 >
                   ⚡ Pro&apos;ya Geç
@@ -327,15 +328,15 @@ export default function DashboardPage() {
             {/* ── LINKLER TAB ── */}
             {tab === 'linkler' && (
               <div className="space-y-4">
-                <form onSubmit={addLink} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-gray-900 mb-4">Yeni Link Ekle</p>
+                <form onSubmit={addLink} className="bg-white border border-line rounded-2xl p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-ink mb-4">Yeni Link Ekle</p>
                   <div className="grid sm:grid-cols-2 gap-3 mb-3">
                     <input
                       value={newTitle}
                       onChange={e => setNewTitle(e.target.value)}
                       placeholder="Başlık (örn: Instagram)"
                       required
-                      className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                      className="bg-white border border-line rounded-xl px-4 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all"
                     />
                     <input
                       value={newUrl}
@@ -343,24 +344,24 @@ export default function DashboardPage() {
                       placeholder="URL (örn: https://instagram.com/...)"
                       required
                       type="url"
-                      className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                      className="bg-white border border-line rounded-xl px-4 py-2.5 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all"
                     />
                   </div>
                   {addError && <p className="text-red-500 text-xs mb-3">{addError}</p>}
                   <button
                     type="submit"
                     disabled={addLoading}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
+                    className="bg-brand-500 hover:bg-brand-400 disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
                   >
                     {addLoading ? 'Ekleniyor...' : '+ Ekle'}
                   </button>
                   {!user.isPro && (
-                    <span className="text-xs text-gray-400 ml-3">{links.length}/5 link kullanıldı</span>
+                    <span className="text-xs text-ink-faint ml-3">{links.length}/5 link kullanıldı</span>
                   )}
                 </form>
 
                 {sortedLinks.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-12 text-ink-faint">
                     <p className="text-4xl mb-3">🔗</p>
                     <p>Henüz link eklemediniz.</p>
                   </div>
@@ -370,7 +371,7 @@ export default function DashboardPage() {
                       <div
                         key={link.id}
                         className={`bg-white border rounded-xl p-4 shadow-sm transition-colors ${
-                          link.isActive ? 'border-gray-200' : 'border-gray-100 opacity-60'
+                          link.isActive ? 'border-line' : 'border-line opacity-60'
                         }`}
                       >
                         {editId === link.id ? (
@@ -378,19 +379,19 @@ export default function DashboardPage() {
                             <input
                               value={editTitle}
                               onChange={e => setEditTitle(e.target.value)}
-                              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                              className="w-full bg-white border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                             />
                             <input
                               value={editUrl}
                               onChange={e => setEditUrl(e.target.value)}
                               type="url"
-                              className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                              className="w-full bg-white border border-line rounded-lg px-3 py-2 text-sm text-ink focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                             />
                             <div className="flex gap-2">
-                              <button onClick={() => saveEdit(link.id)} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors">
+                              <button onClick={() => saveEdit(link.id)} className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors">
                                 Kaydet
                               </button>
-                              <button onClick={() => setEditId(null)} className="text-gray-500 hover:text-gray-900 text-xs px-3 py-1.5 rounded-lg transition-colors">
+                              <button onClick={() => setEditId(null)} className="text-ink-soft hover:text-ink text-xs px-3 py-1.5 rounded-lg transition-colors">
                                 İptal
                               </button>
                             </div>
@@ -401,42 +402,42 @@ export default function DashboardPage() {
                               <button
                                 onClick={() => moveLink(link.id, 'up')}
                                 disabled={idx === 0}
-                                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none"
+                                className="text-ink-faint hover:text-ink-soft disabled:opacity-20 text-xs leading-none"
                               >▲</button>
                               <button
                                 onClick={() => moveLink(link.id, 'down')}
                                 disabled={idx === sortedLinks.length - 1}
-                                className="text-gray-400 hover:text-gray-700 disabled:opacity-20 text-xs leading-none"
+                                className="text-ink-faint hover:text-ink-soft disabled:opacity-20 text-xs leading-none"
                               >▼</button>
                             </div>
 
                             <span className="text-lg shrink-0">{getPlatformIcon(link.url)}</span>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm text-gray-900 truncate">{link.title}</p>
-                              <p className="text-gray-400 text-xs truncate">{link.url}</p>
+                              <p className="font-medium text-sm text-ink truncate">{link.title}</p>
+                              <p className="text-ink-faint text-xs truncate">{link.url}</p>
                             </div>
 
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-gray-400">{link.clicks} tık</span>
+                              <span className="text-xs text-ink-faint font-mono">{link.clicks} tık</span>
                               <button
                                 onClick={() => toggleActive(link.id, link.isActive)}
                                 className={`text-xs px-2 py-1 rounded-md transition-colors ${
                                   link.isActive
-                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                                    : 'bg-gray-100 text-gray-400 border border-gray-200'
+                                    ? 'bg-teal-soft text-teal border border-teal/30'
+                                    : 'bg-paper-alt text-ink-faint border border-line'
                                 }`}
                               >
                                 {link.isActive ? 'Aktif' : 'Pasif'}
                               </button>
                               <button
                                 onClick={() => { setEditId(link.id); setEditTitle(link.title); setEditUrl(link.url) }}
-                                className="text-gray-400 hover:text-gray-900 text-xs px-2 py-1 rounded-md hover:bg-gray-100 transition-colors"
+                                className="text-ink-faint hover:text-ink text-xs px-2 py-1 rounded-md hover:bg-paper-alt transition-colors"
                               >
                                 Düzenle
                               </button>
                               <button
                                 onClick={() => deleteLink(link.id)}
-                                className="text-gray-400 hover:text-red-500 text-xs px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
+                                className="text-ink-faint hover:text-red-500 text-xs px-2 py-1 rounded-md hover:bg-red-50 transition-colors"
                               >
                                 Sil
                               </button>
@@ -453,21 +454,21 @@ export default function DashboardPage() {
             {/* ── PROFİL TAB ── */}
             {tab === 'profil' && (
               <form onSubmit={saveProfile} className="space-y-5">
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 shadow-sm">
-                  <h2 className="font-semibold text-gray-900">Profil Bilgileri</h2>
+                <div className="bg-white border border-line rounded-2xl p-6 space-y-4 shadow-sm">
+                  <h2 className="font-display font-semibold text-ink">Profil Bilgileri</h2>
 
                   {/* Avatar */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Profil Fotoğrafı</label>
+                    <label className="block text-sm font-medium text-ink-soft mb-2">Profil Fotoğrafı</label>
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-full bg-indigo-700 flex items-center justify-center text-xl font-bold overflow-hidden shrink-0">
+                      <div className="w-16 h-16 rounded-full bg-brand-500 flex items-center justify-center text-xl font-display font-bold text-white overflow-hidden shrink-0">
                         {user.avatarUrl
                           ? <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                           : user.displayName[0].toUpperCase()
                         }
                       </div>
                       <div>
-                        <label className="cursor-pointer bg-white hover:bg-gray-50 border border-gray-200 text-sm text-gray-700 px-4 py-2 rounded-lg transition-colors inline-block">
+                        <label className="cursor-pointer bg-white hover:bg-paper-alt border border-line text-sm text-ink-soft px-4 py-2 rounded-lg transition-colors inline-block">
                           {avatarLoading ? 'Yükleniyor...' : 'Fotoğraf Seç'}
                           <input
                             type="file"
@@ -489,19 +490,19 @@ export default function DashboardPage() {
                             }}
                           />
                         </label>
-                        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP — maks. 2MB</p>
+                        <p className="text-xs text-ink-faint mt-1">JPG, PNG, WebP — maks. 2MB</p>
                       </div>
                     </div>
                   </div>
 
                   {/* QR Code */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">QR Kod</label>
+                    <label className="block text-sm font-medium text-ink-soft mb-2">QR Kod</label>
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => setShowQR(!showQR)}
-                        className="text-sm bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                        className="text-sm bg-white hover:bg-paper-alt border border-line text-ink-soft px-4 py-2 rounded-lg transition-colors"
                       >
                         {showQR ? 'Gizle' : 'QR Kodu Göster'}
                       </button>
@@ -509,56 +510,56 @@ export default function DashboardPage() {
                         <a
                           href={`/api/qr/${user.username}`}
                           download={`${user.username}-qr.svg`}
-                          className="text-sm text-indigo-600 hover:text-indigo-800 transition-colors"
+                          className="text-sm text-brand-600 hover:text-brand-700 transition-colors"
                         >
                           İndir (SVG)
                         </a>
                       )}
                     </div>
                     {showQR && (
-                      <div className="mt-3 bg-white border border-gray-200 rounded-xl p-4 inline-block shadow-sm">
+                      <div className="mt-3 bg-white border border-line rounded-xl p-4 inline-block shadow-sm">
                         <img src={`/api/qr/${user.username}`} alt="QR" className="w-40 h-40" />
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Görünen Ad</label>
+                    <label className="block text-sm font-medium text-ink-soft mb-1.5">Görünen Ad</label>
                     <input
                       value={profileForm.displayName}
                       onChange={e => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
                       required
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                      className="w-full bg-white border border-line rounded-xl px-4 py-3 text-sm text-ink focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Bio <span className="text-gray-400 font-normal">(opsiyonel)</span>
+                    <label className="block text-sm font-medium text-ink-soft mb-1.5">
+                      Bio <span className="text-ink-faint font-normal">(opsiyonel)</span>
                     </label>
                     <textarea
                       value={profileForm.bio}
                       onChange={e => setProfileForm(f => ({ ...f, bio: e.target.value }))}
                       rows={3}
                       placeholder="Kendinizi kısaca tanıtın..."
-                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+                      className="w-full bg-white border border-line rounded-xl px-4 py-3 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 transition-all resize-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Kullanıcı Adı</label>
+                    <label className="block text-sm font-medium text-ink-soft mb-1.5">Kullanıcı Adı</label>
                     <input
                       value={user.username}
                       disabled
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-400 cursor-not-allowed"
+                      className="w-full bg-paper-alt border border-line rounded-xl px-4 py-3 text-sm text-ink-faint cursor-not-allowed"
                     />
-                    <p className="text-xs text-gray-400 mt-1">Kullanıcı adı değiştirilemez.</p>
+                    <p className="text-xs text-ink-faint mt-1">Kullanıcı adı değiştirilemez.</p>
                   </div>
                 </div>
 
                 {/* Preset themes */}
-                <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                  <h2 className="font-semibold text-gray-900 mb-4">Hazır Tema</h2>
+                <div className="bg-white border border-line rounded-2xl p-6 shadow-sm">
+                  <h2 className="font-display font-semibold text-ink mb-4">Hazır Tema</h2>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
                     {PRESET_THEMES.map(t => (
                       <button
@@ -568,13 +569,13 @@ export default function DashboardPage() {
                         onClick={() => !t.pro || user.isPro ? setProfileForm(f => ({ ...f, theme: t.id })) : null}
                         className={`relative p-3 rounded-xl border text-sm font-medium transition-colors ${
                           profileForm.theme === t.id
-                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                            ? 'border-brand-500 bg-brand-50 text-brand-700'
+                            : 'border-line text-ink-soft hover:border-ink-faint'
                         } ${t.pro && !user.isPro ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         {t.label}
                         {t.pro && (
-                          <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">PRO</span>
+                          <span className="absolute -top-1.5 -right-1.5 bg-brand-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">PRO</span>
                         )}
                       </button>
                     ))}
@@ -582,17 +583,17 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Theme editor - Pro */}
-                <div className={`bg-white border border-gray-200 rounded-2xl p-6 shadow-sm ${!user.isPro ? 'opacity-60' : ''}`}>
+                <div className={`bg-white border border-line rounded-2xl p-6 shadow-sm ${!user.isPro ? 'opacity-60' : ''}`}>
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="font-semibold text-gray-900">Tema Editörü</h2>
+                    <h2 className="font-display font-semibold text-ink">Tema Editörü</h2>
                     {!user.isPro && (
-                      <span className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-full font-semibold">PRO</span>
+                      <span className="text-xs bg-brand-500 text-white px-2.5 py-1 rounded-full font-semibold">PRO</span>
                     )}
                   </div>
 
                   {/* Button style */}
                   <div className="mb-5">
-                    <label className="block text-xs font-medium text-gray-500 mb-2">Buton Şekli</label>
+                    <label className="block text-xs font-medium text-ink-faint mb-2">Buton Şekli</label>
                     <div className="flex gap-2">
                       {BTN_STYLES.map(s => (
                         <button
@@ -602,8 +603,8 @@ export default function DashboardPage() {
                           onClick={() => updateThemeConfig({ btnStyle: s.id as ThemeConfig['btnStyle'] })}
                           className={`flex-1 py-2.5 border text-xs font-medium transition-colors ${s.cls} ${
                             profileForm.themeConfig.btnStyle === s.id
-                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                              ? 'border-brand-500 bg-brand-50 text-brand-700'
+                              : 'border-line text-ink-soft hover:border-ink-faint'
                           } disabled:cursor-not-allowed`}
                         >
                           {s.label}
@@ -614,7 +615,7 @@ export default function DashboardPage() {
 
                   {/* Font family */}
                   <div className="mb-5">
-                    <label className="block text-xs font-medium text-gray-500 mb-2">Yazı Tipi</label>
+                    <label className="block text-xs font-medium text-ink-faint mb-2">Yazı Tipi</label>
                     <div className="grid grid-cols-2 gap-2">
                       {FONTS.map(f => (
                         <button
@@ -625,8 +626,8 @@ export default function DashboardPage() {
                           style={f.style}
                           className={`py-2.5 px-3 border text-sm transition-colors rounded-xl ${
                             profileForm.themeConfig.fontFamily === f.id
-                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                              ? 'border-brand-500 bg-brand-50 text-brand-700'
+                              : 'border-line text-ink-soft hover:border-ink-faint'
                           } disabled:cursor-not-allowed`}
                         >
                           {f.label}
@@ -638,13 +639,13 @@ export default function DashboardPage() {
                   {/* Custom background gradient */}
                   <div>
                     <div className="flex items-center gap-3 mb-3">
-                      <label className="text-xs font-medium text-gray-500">Özel Arka Plan Rengi</label>
+                      <label className="text-xs font-medium text-ink-faint">Özel Arka Plan Rengi</label>
                       <button
                         type="button"
                         disabled={!user.isPro}
                         onClick={() => updateThemeConfig({ bgGradient: !profileForm.themeConfig.bgGradient })}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:cursor-not-allowed ${
-                          profileForm.themeConfig.bgGradient ? 'bg-indigo-600' : 'bg-gray-300'
+                          profileForm.themeConfig.bgGradient ? 'bg-brand-500' : 'bg-line'
                         }`}
                       >
                         <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -656,14 +657,14 @@ export default function DashboardPage() {
                     {profileForm.themeConfig.bgGradient && (
                       <div className="flex gap-4">
                         <div className="flex-1">
-                          <p className="text-xs text-gray-400 mb-1.5">Renk 1</p>
+                          <p className="text-xs text-ink-faint mb-1.5">Renk 1</p>
                           <div className="flex gap-2 items-center">
                             <input
                               type="color"
                               value={profileForm.themeConfig.bgFrom || '#0a0f1e'}
                               disabled={!user.isPro}
                               onChange={e => updateThemeConfig({ bgFrom: e.target.value })}
-                              className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                              className="w-10 h-10 rounded-lg cursor-pointer border border-line bg-transparent p-0.5 disabled:cursor-not-allowed"
                             />
                             <input
                               value={profileForm.themeConfig.bgFrom || '#0a0f1e'}
@@ -671,19 +672,19 @@ export default function DashboardPage() {
                               onChange={e => updateThemeConfig({ bgFrom: e.target.value })}
                               placeholder="#0a0f1e"
                               maxLength={7}
-                              className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                              className="flex-1 bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink font-mono focus:outline-none focus:border-brand-500 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs text-gray-400 mb-1.5">Renk 2</p>
+                          <p className="text-xs text-ink-faint mb-1.5">Renk 2</p>
                           <div className="flex gap-2 items-center">
                             <input
                               type="color"
                               value={profileForm.themeConfig.bgTo || '#6366f1'}
                               disabled={!user.isPro}
                               onChange={e => updateThemeConfig({ bgTo: e.target.value })}
-                              className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                              className="w-10 h-10 rounded-lg cursor-pointer border border-line bg-transparent p-0.5 disabled:cursor-not-allowed"
                             />
                             <input
                               value={profileForm.themeConfig.bgTo || '#6366f1'}
@@ -691,7 +692,7 @@ export default function DashboardPage() {
                               onChange={e => updateThemeConfig({ bgTo: e.target.value })}
                               placeholder="#6366f1"
                               maxLength={7}
-                              className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                              className="flex-1 bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink font-mono focus:outline-none focus:border-brand-500 disabled:cursor-not-allowed"
                             />
                           </div>
                         </div>
@@ -701,7 +702,7 @@ export default function DashboardPage() {
                     {/* Gradient preview */}
                     {profileForm.themeConfig.bgGradient && (
                       <div
-                        className="mt-3 h-10 rounded-xl border border-gray-200"
+                        className="mt-3 h-10 rounded-xl border border-line"
                         style={{
                           background: `linear-gradient(135deg, ${profileForm.themeConfig.bgFrom || '#0a0f1e'}, ${profileForm.themeConfig.bgTo || '#6366f1'})`
                         }}
@@ -711,43 +712,43 @@ export default function DashboardPage() {
 
                   {/* Button color */}
                   <div className="mt-5">
-                    <label className="block text-xs font-medium text-gray-500 mb-3">Buton Rengi</label>
+                    <label className="block text-xs font-medium text-ink-faint mb-3">Buton Rengi</label>
                     <div className="flex gap-4">
                       <div className="flex-1">
-                        <p className="text-xs text-gray-400 mb-1.5">Arka Plan</p>
+                        <p className="text-xs text-ink-faint mb-1.5">Arka Plan</p>
                         <div className="flex gap-2 items-center">
                           <input
                             type="color"
                             value={profileForm.themeConfig.btnColor || '#4f46e5'}
                             disabled={!user.isPro}
                             onChange={e => updateThemeConfig({ btnColor: e.target.value })}
-                            className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                            className="w-10 h-10 rounded-lg cursor-pointer border border-line bg-transparent p-0.5 disabled:cursor-not-allowed"
                           />
                           <input
                             value={profileForm.themeConfig.btnColor || '#4f46e5'}
                             disabled={!user.isPro}
                             onChange={e => updateThemeConfig({ btnColor: e.target.value })}
                             maxLength={7}
-                            className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                            className="flex-1 bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink font-mono focus:outline-none focus:border-brand-500 disabled:cursor-not-allowed"
                           />
                         </div>
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs text-gray-400 mb-1.5">Yazı Rengi</p>
+                        <p className="text-xs text-ink-faint mb-1.5">Yazı Rengi</p>
                         <div className="flex gap-2 items-center">
                           <input
                             type="color"
                             value={profileForm.themeConfig.btnTextColor || '#ffffff'}
                             disabled={!user.isPro}
                             onChange={e => updateThemeConfig({ btnTextColor: e.target.value })}
-                            className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                            className="w-10 h-10 rounded-lg cursor-pointer border border-line bg-transparent p-0.5 disabled:cursor-not-allowed"
                           />
                           <input
                             value={profileForm.themeConfig.btnTextColor || '#ffffff'}
                             disabled={!user.isPro}
                             onChange={e => updateThemeConfig({ btnTextColor: e.target.value })}
                             maxLength={7}
-                            className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                            className="flex-1 bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink font-mono focus:outline-none focus:border-brand-500 disabled:cursor-not-allowed"
                           />
                         </div>
                       </div>
@@ -768,38 +769,38 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Advanced customization - Pro */}
-                <div className={`bg-white border border-gray-200 rounded-2xl p-6 shadow-sm ${!user.isPro ? 'opacity-60' : ''}`}>
+                <div className={`bg-white border border-line rounded-2xl p-6 shadow-sm ${!user.isPro ? 'opacity-60' : ''}`}>
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="font-semibold text-gray-900">Gelişmiş Özelleştirme</h2>
+                    <h2 className="font-display font-semibold text-ink">Gelişmiş Özelleştirme</h2>
                     {!user.isPro && (
-                      <span className="text-xs bg-indigo-600 text-white px-2.5 py-1 rounded-full font-semibold">PRO</span>
+                      <span className="text-xs bg-brand-500 text-white px-2.5 py-1 rounded-full font-semibold">PRO</span>
                     )}
                   </div>
 
                   {/* Title color */}
                   <div className="mb-5">
-                    <label className="block text-xs font-medium text-gray-500 mb-2">Başlık / İsim Rengi</label>
+                    <label className="block text-xs font-medium text-ink-faint mb-2">Başlık / İsim Rengi</label>
                     <div className="flex gap-2 items-center">
                       <input
                         type="color"
                         value={profileForm.themeConfig.titleColor || '#ffffff'}
                         disabled={!user.isPro}
                         onChange={e => updateThemeConfig({ titleColor: e.target.value })}
-                        className="w-10 h-10 rounded-lg cursor-pointer border border-gray-200 bg-transparent p-0.5 disabled:cursor-not-allowed"
+                        className="w-10 h-10 rounded-lg cursor-pointer border border-line bg-transparent p-0.5 disabled:cursor-not-allowed"
                       />
                       <input
                         value={profileForm.themeConfig.titleColor || '#ffffff'}
                         disabled={!user.isPro}
                         onChange={e => updateThemeConfig({ titleColor: e.target.value })}
                         maxLength={7}
-                        className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 font-mono focus:outline-none focus:border-indigo-500 disabled:cursor-not-allowed"
+                        className="flex-1 bg-white border border-line rounded-lg px-3 py-2 text-xs text-ink font-mono focus:outline-none focus:border-brand-500 disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
 
                   {/* Avatar shape */}
                   <div className="mb-5">
-                    <label className="block text-xs font-medium text-gray-500 mb-2">Avatar Şekli</label>
+                    <label className="block text-xs font-medium text-ink-faint mb-2">Avatar Şekli</label>
                     <div className="flex gap-2">
                       {([{ id: 'circle', label: 'Yuvarlak', cls: 'rounded-full' }, { id: 'rounded', label: 'Köşeli Yuv.', cls: 'rounded-xl' }, { id: 'square', label: 'Kare', cls: 'rounded-none' }] as const).map(s => (
                         <button
@@ -809,8 +810,8 @@ export default function DashboardPage() {
                           onClick={() => updateThemeConfig({ avatarShape: s.id })}
                           className={`flex-1 py-2 border text-xs font-medium transition-colors ${s.cls} ${
                             profileForm.themeConfig.avatarShape === s.id
-                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                              ? 'border-brand-500 bg-brand-50 text-brand-700'
+                              : 'border-line text-ink-soft hover:border-ink-faint'
                           } disabled:cursor-not-allowed`}
                         >
                           {s.label}
@@ -821,7 +822,7 @@ export default function DashboardPage() {
 
                   {/* Social icon style */}
                   <div className="mb-5">
-                    <label className="block text-xs font-medium text-gray-500 mb-2">Sosyal Ikon Konumu</label>
+                    <label className="block text-xs font-medium text-ink-faint mb-2">Sosyal Ikon Konumu</label>
                     <div className="flex gap-2">
                       {([{ id: 'none', label: 'Yok' }, { id: 'left', label: 'Solda' }, { id: 'center', label: 'Ortada' }] as const).map(s => (
                         <button
@@ -831,8 +832,8 @@ export default function DashboardPage() {
                           onClick={() => updateThemeConfig({ socialIconStyle: s.id })}
                           className={`flex-1 py-2 rounded-xl border text-xs font-medium transition-colors ${
                             profileForm.themeConfig.socialIconStyle === s.id
-                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                              : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                              ? 'border-brand-500 bg-brand-50 text-brand-700'
+                              : 'border-line text-ink-soft hover:border-ink-faint'
                           } disabled:cursor-not-allowed`}
                         >
                           {s.label}
@@ -844,8 +845,8 @@ export default function DashboardPage() {
                   {/* Card opacity */}
                   <div className="mb-5">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-medium text-gray-500">Kart Saydamlığı</label>
-                      <span className="text-xs font-mono text-gray-700 bg-gray-100 px-2 py-0.5 rounded">{profileForm.themeConfig.cardOpacity ?? 100}%</span>
+                      <label className="text-xs font-medium text-ink-faint">Kart Saydamlığı</label>
+                      <span className="text-xs font-mono text-ink-soft bg-paper-alt px-2 py-0.5 rounded">{profileForm.themeConfig.cardOpacity ?? 100}%</span>
                     </div>
                     <input
                       type="range"
@@ -855,9 +856,9 @@ export default function DashboardPage() {
                       value={profileForm.themeConfig.cardOpacity ?? 100}
                       disabled={!user.isPro}
                       onChange={e => updateThemeConfig({ cardOpacity: Number(e.target.value) })}
-                      className="w-full accent-indigo-600 disabled:cursor-not-allowed"
+                      className="w-full accent-brand-500 disabled:cursor-not-allowed"
                     />
-                    <div className="flex justify-between text-[10px] text-gray-300 mt-1">
+                    <div className="flex justify-between text-[10px] text-ink-faint mt-1">
                       <span>Saydam</span><span>Opak</span>
                     </div>
                   </div>
@@ -865,13 +866,13 @@ export default function DashboardPage() {
                   {/* Show bio toggle */}
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-gray-500">Bio Göster</label>
+                      <label className="text-xs font-medium text-ink-faint">Bio Göster</label>
                       <button
                         type="button"
                         disabled={!user.isPro}
                         onClick={() => updateThemeConfig({ showBio: !(profileForm.themeConfig.showBio ?? true) })}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:cursor-not-allowed ${
-                          (profileForm.themeConfig.showBio ?? true) ? 'bg-indigo-600' : 'bg-gray-300'
+                          (profileForm.themeConfig.showBio ?? true) ? 'bg-brand-500' : 'bg-line'
                         }`}
                       >
                         <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -879,13 +880,13 @@ export default function DashboardPage() {
                         }`} />
                       </button>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1">Profil sayfasında bio metnini göster veya gizle</p>
+                    <p className="text-[11px] text-ink-faint mt-1">Profil sayfasında bio metnini göster veya gizle</p>
                   </div>
                 </div>
 
                 {profileMsg && (
                   <div className={`rounded-lg px-4 py-3 text-sm ${
-                    profileMsg.includes('!') ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-600'
+                    profileMsg.includes('!') ? 'bg-teal-soft border border-teal/30 text-teal' : 'bg-red-50 border border-red-200 text-red-600'
                   }`}>
                     {profileMsg}
                   </div>
@@ -894,7 +895,7 @@ export default function DashboardPage() {
                 <button
                   type="submit"
                   disabled={profileLoading}
-                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+                  className="bg-brand-500 hover:bg-brand-400 disabled:opacity-40 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
                 >
                   {profileLoading ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
@@ -913,7 +914,7 @@ export default function DashboardPage() {
                         fetch(`/api/analytics?days=${d}`).then(r => r.json()).then(setAnalytics)
                       }}
                       className={`text-xs px-4 py-1.5 rounded-lg font-medium transition-colors ${
-                        analyticsDays === d ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:text-gray-900'
+                        analyticsDays === d ? 'bg-brand-500 text-white' : 'bg-white border border-line text-ink-soft hover:text-ink'
                       }`}
                     >
                       {d} gün
@@ -921,77 +922,77 @@ export default function DashboardPage() {
                   ))}
                   <button
                     onClick={() => fetch(`/api/analytics?days=${analyticsDays}`).then(r => r.json()).then(setAnalytics)}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-gray-900 transition-colors ml-auto"
+                    className="text-xs px-3 py-1.5 rounded-lg bg-white border border-line text-ink-faint hover:text-ink transition-colors ml-auto"
                   >
                     ↻ Yenile
                   </button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
-                    <div className="text-2xl font-black text-gray-900 mb-1">{analytics?.totalClicks ?? totalClicks}</div>
-                    <div className="text-xs text-gray-400">Dönem Tıklama</div>
+                  <div className="bg-white border border-line rounded-2xl p-5 text-center shadow-sm">
+                    <div className="font-mono text-2xl font-black text-ink mb-1">{analytics?.totalClicks ?? totalClicks}</div>
+                    <div className="text-xs text-ink-faint">Dönem Tıklama</div>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
-                    <div className="text-2xl font-black text-gray-900 mb-1">{links.reduce((s, l) => s + l.clicks, 0)}</div>
-                    <div className="text-xs text-gray-400">Toplam Tıklama</div>
+                  <div className="bg-white border border-line rounded-2xl p-5 text-center shadow-sm">
+                    <div className="font-mono text-2xl font-black text-ink mb-1">{links.reduce((s, l) => s + l.clicks, 0)}</div>
+                    <div className="text-xs text-ink-faint">Toplam Tıklama</div>
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
-                    <div className="text-2xl font-black text-gray-900 mb-1">{links.length}</div>
-                    <div className="text-xs text-gray-400">Toplam Link</div>
+                  <div className="bg-white border border-line rounded-2xl p-5 text-center shadow-sm">
+                    <div className="font-mono text-2xl font-black text-ink mb-1">{links.length}</div>
+                    <div className="text-xs text-ink-faint">Toplam Link</div>
                   </div>
                 </div>
 
                 {analytics && analytics.daily.length > 0 && (
-                  <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                    <p className="text-sm font-semibold text-gray-900 mb-4">Günlük Tıklama Grafiği</p>
+                  <div className="bg-white border border-line rounded-2xl p-5 shadow-sm">
+                    <p className="text-sm font-semibold text-ink mb-4">Günlük Tıklama Grafiği</p>
                     <ResponsiveContainer width="100%" height={200}>
                       <AreaChart data={analytics.daily}>
                         <defs>
                           <linearGradient id="clickGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#F0641E" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#F0641E" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <XAxis
                           dataKey="date"
-                          tick={{ fill: '#64748b', fontSize: 11 }}
+                          tick={{ fill: '#8A8A92', fontSize: 11 }}
                           tickFormatter={v => v.slice(5)}
                           axisLine={false}
                           tickLine={false}
                         />
-                        <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <YAxis tick={{ fill: '#8A8A92', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                         <Tooltip
-                          contentStyle={{ background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', color: '#111827' }}
+                          contentStyle={{ background: '#ffffff', border: '1px solid #E5E1D8', borderRadius: '12px', color: '#17171C' }}
                           labelFormatter={v => `Tarih: ${v}`}
                           formatter={(v: number) => [`${v} tık`, 'Tıklama']}
                         />
-                        <Area type="monotone" dataKey="clicks" stroke="#6366f1" strokeWidth={2} fill="url(#clickGrad)" />
+                        <Area type="monotone" dataKey="clicks" stroke="#F0641E" strokeWidth={2} fill="url(#clickGrad)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 )}
 
                 {sortedLinks.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400"><p>Henüz link eklemediniz.</p></div>
+                  <div className="text-center py-8 text-ink-faint"><p>Henüz link eklemediniz.</p></div>
                 ) : (
-                  <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                    <div className="px-5 py-3.5 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900">Link Performansı</p>
+                  <div className="bg-white border border-line rounded-2xl overflow-hidden shadow-sm">
+                    <div className="px-5 py-3.5 border-b border-line">
+                      <p className="text-sm font-semibold text-ink">Link Performansı</p>
                     </div>
-                    <div className="divide-y divide-gray-100">
+                    <div className="divide-y divide-line">
                       {[...sortedLinks].sort((a, b) => b.clicks - a.clicks).map(link => (
                         <div key={link.id} className="px-5 py-3.5">
                           <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-base">{getPlatformIcon(link.url)}</span>
-                              <p className="text-sm font-medium text-gray-900 truncate">{link.title}</p>
+                              <p className="text-sm font-medium text-ink truncate">{link.title}</p>
                             </div>
-                            <span className="text-sm font-bold text-indigo-600 ml-3 shrink-0">{link.clicks} tık</span>
+                            <span className="text-sm font-bold text-brand-600 font-mono ml-3 shrink-0">{link.clicks} tık</span>
                           </div>
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-paper-alt rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-indigo-600 rounded-full transition-all"
+                              className="h-full bg-brand-500 rounded-full transition-all"
                               style={{ width: totalClicks > 0 ? `${(link.clicks / totalClicks) * 100}%` : '0%' }}
                             />
                           </div>
@@ -1006,15 +1007,15 @@ export default function DashboardPage() {
             {/* ── PRO TAB ── */}
             {tab === 'pro' && (
               <div className="space-y-5">
-                <div className="relative bg-gradient-to-br from-indigo-600 to-violet-600 border border-indigo-500 rounded-2xl p-8 text-center overflow-hidden">
-                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                <div className="relative bg-ink rounded-2xl p-8 text-center overflow-hidden">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-500/20 rounded-full blur-2xl" />
                   <div className="relative">
                     <div className="text-5xl mb-3">⚡</div>
-                    <h2 className="text-2xl font-bold mb-2 text-white">Pro&apos;ya Yükselt</h2>
-                    <p className="text-indigo-200 mb-6">Ayda sadece <strong className="text-white">₺59</strong> ile tüm özellikleri açın.</p>
+                    <h2 className="font-display text-2xl font-bold mb-2 text-white">Pro&apos;ya Yükselt</h2>
+                    <p className="text-white/60 mb-6">Ayda sadece <strong className="text-white">₺59</strong> ile tüm özellikleri açın.</p>
                     <Link
                       href="/pro"
-                      className="inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors"
+                      className="inline-block bg-brand-500 hover:bg-brand-400 text-white font-semibold px-8 py-3.5 rounded-xl transition-colors"
                     >
                       Pro Planı İncele &rarr;
                     </Link>
@@ -1026,10 +1027,10 @@ export default function DashboardPage() {
                     { icon: '🎨', title: 'Tema Editörü', desc: 'Gradient arka plan, özel renkler, buton şekli, font seçimi.' },
                     { icon: '📊', title: 'Detaylı Analitik', desc: 'Günlük, haftalık tıklama takibi.' },
                   ].map(f => (
-                    <div key={f.title} className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                    <div key={f.title} className="bg-white border border-line rounded-2xl p-5 text-center shadow-sm">
                       <div className="text-3xl mb-3">{f.icon}</div>
-                      <h3 className="font-semibold text-sm mb-1 text-gray-900">{f.title}</h3>
-                      <p className="text-gray-500 text-xs">{f.desc}</p>
+                      <h3 className="font-display font-semibold text-sm mb-1 text-ink">{f.title}</h3>
+                      <p className="text-ink-soft text-xs">{f.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -1041,23 +1042,23 @@ export default function DashboardPage() {
           {/* ─── Preview panel (desktop only) ─── */}
           <div className="hidden lg:block w-[268px] shrink-0 sticky top-24 self-start">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Önizleme</p>
+              <p className="text-xs font-semibold text-ink-faint uppercase tracking-wider">Önizleme</p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setLivePreview(v => !v)}
                   className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium transition-colors border ${
                     livePreview
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-                      : 'bg-gray-100 border-gray-200 text-gray-500'
+                      ? 'bg-teal-soft border-teal/30 text-teal'
+                      : 'bg-paper-alt border-line text-ink-faint'
                   }`}
                   title={livePreview ? 'Canlı akış açık' : 'Canlı akış kapalı'}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${livePreview ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${livePreview ? 'bg-teal animate-pulse' : 'bg-ink-faint'}`} />
                   {livePreview ? 'Canlı' : 'Statik'}
                 </button>
                 <button
                   onClick={() => setPreviewKey(k => k + 1)}
-                  className="text-xs text-gray-400 hover:text-gray-700 transition-colors p-1"
+                  className="text-xs text-ink-faint hover:text-ink transition-colors p-1"
                   title="Yenile"
                 >
                   ↻
@@ -1067,11 +1068,11 @@ export default function DashboardPage() {
 
             {/* iPhone frame */}
             <div className="relative mx-auto" style={{ width: '260px' }}>
-              <div className="bg-gray-900 rounded-[44px] p-[10px] border-[3px] border-gray-700 shadow-2xl shadow-gray-400/30">
+              <div className="bg-ink rounded-[44px] p-[10px] border-[3px] border-ink/80 shadow-2xl shadow-ink/25">
                 {/* Dynamic island */}
-                <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-950 rounded-full z-10 border border-gray-800" />
+                <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-10 border border-ink" />
                 {/* Screen */}
-                <div className="rounded-[36px] overflow-hidden bg-gray-950" style={{ height: '520px' }}>
+                <div className="rounded-[36px] overflow-hidden bg-black" style={{ height: '520px' }}>
                   <iframe
                     key={previewKey}
                     src={`/${user.username}${livePreview ? `?_t=${previewKey}` : ''}`}
@@ -1081,14 +1082,14 @@ export default function DashboardPage() {
                   />
                 </div>
                 {/* Home indicator */}
-                <div className="mt-2.5 mx-auto w-16 h-1 bg-gray-600 rounded-full" />
+                <div className="mt-2.5 mx-auto w-16 h-1 bg-ink/60 rounded-full" />
               </div>
             </div>
 
-            <p className="text-center text-xs text-gray-400 mt-3">
+            <p className="text-center text-xs text-ink-faint mt-3">
               {livePreview
-                ? <>Değişiklikler kaydedince<br />otomatik güncellenir.</>  
-                : <>Kaydet&apos;e bastıktan sonra<br />↻ Yenile&apos;ye basın.</>  
+                ? <>Değişiklikler kaydedince<br />otomatik güncellenir.</>
+                : <>Kaydet&apos;e bastıktan sonra<br />↻ Yenile&apos;ye basın.</>
               }
             </p>
           </div>

@@ -21,14 +21,14 @@ const THEMES: Record<string, { bg: string; card: string; btn: string; text: stri
   koyu: {
     bg: 'min-h-screen bg-[#0a0f1e]',
     card: 'bg-[#0a0f1e]',
-    btn: 'bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500 text-white',
+    btn: 'bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-brand-500 text-white',
     text: 'text-white',
     subtext: 'text-slate-400',
   },
   acik: {
     bg: 'min-h-screen bg-slate-100',
     card: 'bg-slate-100',
-    btn: 'bg-white hover:bg-slate-50 border border-slate-200 hover:border-indigo-400 text-slate-900 shadow-sm',
+    btn: 'bg-white hover:bg-slate-50 border border-slate-200 hover:border-brand-400 text-slate-900 shadow-sm',
     text: 'text-slate-900',
     subtext: 'text-slate-500',
   },
@@ -172,7 +172,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
               className={`w-20 h-20 object-cover ${avatarRadius}`}
             />
           ) : (
-            <div className={`w-20 h-20 bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white ${avatarRadius}`}>
+            <div className={`w-20 h-20 bg-brand-500 flex items-center justify-center text-2xl font-bold text-white ${avatarRadius}`}>
               {initials}
             </div>
           )}

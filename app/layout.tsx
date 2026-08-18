@@ -1,6 +1,24 @@
 import type { Metadata } from 'next'
+import { Bricolage_Grotesque, Manrope, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { COMPANY } from '@/lib/company'
+
+const display = Bricolage_Grotesque({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-display',
+  display: 'swap',
+})
+const body = Manrope({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-body',
+  display: 'swap',
+})
+const mono = IBM_Plex_Mono({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(COMPANY.baseUrl),
@@ -29,8 +47,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
-      <body className="min-h-screen bg-white text-gray-900 antialiased">
+    <html lang="tr" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <body className="min-h-screen bg-paper text-ink antialiased font-sans">
         {children}
       </body>
     </html>
